@@ -38,8 +38,8 @@ export default function Footer() {
   return (
     <footer className="relative border-t bg-white/70" style={{ borderColor: 'rgba(217,119,87,0.1)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          <div className="col-span-2 md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div className="sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #e8895a, #c9603a)' }}>
                 <Icon icon="ph:planet-bold" className="text-white text-lg" />

@@ -22,13 +22,13 @@ function SceneChores({ visible }: { visible: boolean }) {
   }, [visible])
 
   return (
-    <div className="w-full h-full flex flex-col p-5 select-none" style={{ background: 'linear-gradient(135deg, #FFF8F2 0%, #F4E7DA 100%)' }}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: '#D97757' }}>
+    <div className="w-full h-full flex flex-col p-3 sm:p-5 select-none" style={{ background: 'linear-gradient(135deg, #FFF8F2 0%, #F4E7DA 100%)' }}>
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center" style={{ background: '#D97757' }}>
           <Icon icon="ph:clipboard-text-bold" className="text-white text-sm" />
         </div>
-        <span className="text-[13px] font-bold text-[#7C3A1A]">Family Chore Board</span>
-        <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">Today</span>
+        <span className="text-[11px] sm:text-[13px] font-bold text-[#7C3A1A]">Family Chore Board</span>
+        <span className="ml-auto text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">Today</span>
       </div>
       <div className="flex-1 grid grid-cols-3 gap-2">
         {members.map(({ name, color, tasks }) => (
@@ -71,13 +71,13 @@ function SceneMeals({ visible }: { visible: boolean }) {
   }, [visible])
 
   return (
-    <div className="w-full h-full flex flex-col p-5 select-none" style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' }}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-xl flex items-center justify-center bg-amber-500">
+    <div className="w-full h-full flex flex-col p-3 sm:p-5 select-none" style={{ background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)' }}>
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center bg-amber-500">
           <Icon icon="ph:cooking-pot-bold" className="text-white text-sm" />
         </div>
-        <span className="text-[13px] font-bold text-amber-900">Weekly Meal Plan</span>
-        <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">AI ✨</span>
+        <span className="text-[11px] sm:text-[13px] font-bold text-amber-900">Weekly Meal Plan</span>
+        <span className="ml-auto text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">AI ✨</span>
       </div>
       <div className="grid grid-cols-7 gap-1 flex-1">
         {days.map((day, i) => (
@@ -121,12 +121,12 @@ function SceneFirstAid({ visible }: { visible: boolean }) {
   }, [visible])
 
   return (
-    <div className="w-full h-full flex flex-col p-5 select-none" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)' }}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-xl flex items-center justify-center bg-blue-500">
+    <div className="w-full h-full flex flex-col p-3 sm:p-5 select-none" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)' }}>
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center bg-blue-500">
           <Icon icon="ph:first-aid-kit-bold" className="text-white text-sm" />
         </div>
-        <span className="text-[13px] font-bold text-blue-900">First Aid Guide</span>
+        <span className="text-[11px] sm:text-[13px] font-bold text-blue-900">First Aid Guide</span>
         <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">2:04 AM</span>
       </div>
       <div className="flex-1 flex flex-col gap-3">
@@ -177,13 +177,13 @@ function SceneCommunity({ visible }: { visible: boolean }) {
   }, [visible, count])
 
   return (
-    <div className="w-full h-full flex flex-col p-5 select-none" style={{ background: 'linear-gradient(135deg, #FAF5FF 0%, #EDE9FE 100%)' }}>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-xl flex items-center justify-center bg-purple-600">
+    <div className="w-full h-full flex flex-col p-3 sm:p-5 select-none" style={{ background: 'linear-gradient(135deg, #FAF5FF 0%, #EDE9FE 100%)' }}>
+      <div className="flex items-center gap-2 mb-2 sm:mb-4">
+        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center bg-purple-600">
           <Icon icon="ph:users-three-bold" className="text-white text-sm" />
         </div>
-        <span className="text-[13px] font-bold text-purple-900">Mom Community</span>
-        <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">50+ online</span>
+        <span className="text-[11px] sm:text-[13px] font-bold text-purple-900">Mom Community</span>
+        <span className="ml-auto text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">50+ online</span>
       </div>
       <div className="flex-1 overflow-hidden space-y-2">
         {msgs.slice(0, count).map((msg, i) => (
@@ -251,7 +251,7 @@ export default function Hero() {
               <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#D97757' }}>From Mummaverse</span>
             </div>
 
-            <h1 className="anim-in-d1 text-[2.6rem] sm:text-[3.2rem] lg:text-[3.6rem] font-black leading-[1.1] tracking-tight text-[#2C1810] mb-6" style={{ fontFamily: "'Nunito', sans-serif" }}>
+            <h1 className="anim-in-d1 text-[2rem] sm:text-[2.8rem] lg:text-[3.6rem] font-black leading-[1.1] tracking-tight text-[#2C1810] mb-6" style={{ fontFamily: "'Nunito', sans-serif" }}>
               Making Family Life{' '}
               <span className="relative" style={{ color: '#D97757' }}>
                 Easier,
@@ -293,7 +293,7 @@ export default function Hero() {
 
           {/* Right — animated scene cards */}
           <div className="order-1 lg:order-2 anim-in-d2">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl" style={{ height: 340, boxShadow: '0 30px 80px -20px rgba(44,24,16,0.16), 0 0 0 1px rgba(217,119,87,0.1)' }}>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[240px] sm:h-[290px] md:h-[340px]" style={{ boxShadow: '0 30px 80px -20px rgba(44,24,16,0.16), 0 0 0 1px rgba(217,119,87,0.1)' }}>
               {SCENES.map(({ Comp }, idx) => (
                 <div
                   key={idx}

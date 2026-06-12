@@ -13,7 +13,7 @@ export default function Stats() {
   return (
     <section className="relative border-y border-[#8B7355]/10 bg-white/60 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
-        <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 gap-8 reveal">
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 reveal">
           {STATS.map(({ value, label, highlight }) => (
             <div key={label} className="stat-item text-center">
               <div className={`text-3xl md:text-4xl font-medium mb-1 ${highlight ? 'text-orange-600' : 'text-[#2C1810]'}`} style={{ fontFamily: "'Nunito', sans-serif" }}>{value}</div>

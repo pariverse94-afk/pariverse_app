@@ -196,6 +196,9 @@
     background: rgba(217,119,87,.1);
   }
   .stat-item:last-child::after { display: none; }
+  @media (max-width: 639px) {
+    .stat-item::after { display: none; }
+  }
 
   .reveal {
     opacity: 0;
