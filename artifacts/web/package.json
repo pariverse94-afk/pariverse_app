@@ -72,6 +72,9 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@replit/vite-plugin-cartographer": "catalog:",
+    "@replit/vite-plugin-dev-banner": "catalog:",
+    "@replit/vite-plugin-runtime-error-modal": "catalog:",
     "react-router-dom": "^7.17.0"
   }
 }

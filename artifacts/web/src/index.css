@@ -496,3 +496,56 @@ html.dark .blog-card [class*="bg-white"] {
 html.dark .blog-card > div:last-child {
   background: rgba(26,20,16,0.95) !important;
 }
+
+/* Article detail body typography */
+.article-body p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #4A3728;
+  margin-bottom: 1.2rem;
+}
+.article-body h2 {
+  font-family: 'Nunito', ui-sans-serif, system-ui;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #2C1810;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.article-body h3 {
+  font-family: 'Nunito', ui-sans-serif, system-ui;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2C1810;
+  margin-top: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+.article-body ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1.2rem;
+}
+.article-body ul li {
+  position: relative;
+  padding-left: 1.4rem;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #4A3728;
+  margin-bottom: 0.4rem;
+}
+.article-body ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #D97757;
+}
+.article-body strong { color: #2C1810; font-weight: 700; }
+html.dark .article-body p,
+html.dark .article-body ul li { color: #C8B8AB; }
+html.dark .article-body h2,
+html.dark .article-body h3,
+html.dark .article-body strong { color: #F0E8E0; }

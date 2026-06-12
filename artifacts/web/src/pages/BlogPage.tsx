@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useNavigate } from 'react-router-dom'
 import { ARTICLES } from '../data/articles'
-import ArticleOverlay from '../components/ArticleOverlay'
 import Footer from '../components/Footer'
 
 const CATEGORIES = ['All', 'Mental Load', 'Meal Planning', 'First Aid', 'Nutrition', 'Mental Health']
@@ -11,16 +10,6 @@ export default function BlogPage() {
   const navigate = useNavigate()
   const [category, setCategory] = useState('All')
   const [search, setSearch] = useState('')
-  const [articleId, setArticleId] = useState<number | null>(null)
-
-  const openArticle = (id: number) => {
-    setArticleId(id)
-    document.body.style.overflow = 'hidden'
-  }
-  const closeArticle = () => {
-    setArticleId(null)
-    document.body.style.overflow = ''
-  }
 
   const filtered = ARTICLES.filter(a => {
     const matchCat = category === 'All' || a.category === category
@@ -104,7 +93,7 @@ export default function BlogPage() {
                 <article
                   key={article.id}
                   className="blog-card rounded-2xl overflow-hidden cursor-pointer"
-                  onClick={() => openArticle(article.id)}
+                  onClick={() => navigate(`/blogs/${article.slug}`)}
                 >
                   <div
                     className="h-44 flex items-center justify-center relative overflow-hidden blog-img"
@@ -162,8 +151,6 @@ export default function BlogPage() {
 
         <Footer />
       </main>
-
-      <ArticleOverlay articleId={articleId} onClose={closeArticle} />
     </>
   )
 }
