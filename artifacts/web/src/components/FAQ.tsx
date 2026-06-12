@@ -2,14 +2,9 @@ import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useReveal } from '../hooks/useReveal'
 import { useNavigate } from 'react-router-dom'
+import { FAQS } from '../data/faqs'
 
-const FAQS = [
-  { q: 'What is Pariverse?', a: "India's first home management app by Mummaverse, for urban moms in nuclear families. Meal planning, nutrition tracking, first aid, and a mom community." },
-  { q: 'What is Mummaverse?', a: 'A product company building apps for urban Indian moms. Pariverse is the first. Eduverse and Selfverse are coming next.' },
-  { q: 'Is it free?', a: 'Yes. Core features will always be free. Optional premium may come later.' },
-  { q: 'Can my partner use it?', a: 'Absolutely. Chore delegation shifts from "helping mom" to "sharing responsibility."' },
-  { q: 'Is my data safe?', a: 'End-to-end encryption. No data selling. DPDPA compliant. Delete anytime.' },
-]
+const PREVIEW_ITEMS = FAQS.flatMap(g => g.items).slice(0, 5)
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
@@ -45,7 +40,7 @@ export default function FAQ() {
           </h2>
         </div>
         <div ref={listRef} className="space-y-3 reveal">
-          {FAQS.map(f => <FaqItem key={f.q} {...f} />)}
+          {PREVIEW_ITEMS.map(f => <FaqItem key={f.q} {...f} />)}
         </div>
         <div className="mt-10 text-center">
           <button
