@@ -28,6 +28,7 @@ function HomePage({ onOpenArticle }: { onOpenArticle: (id: number) => void }) {
   return (
     <main id="main-page">
       <Hero />
+      <Testimonial />
       <Stats />
       <Problem />
       <Features />
@@ -36,7 +37,6 @@ function HomePage({ onOpenArticle }: { onOpenArticle: (id: number) => void }) {
       <Chores />
       <Blog onOpenArticle={onOpenArticle} />
       <Ecosystem />
-      <Testimonial />
       <FAQ />
       <Waitlist />
       <Footer />

@@ -5,7 +5,8 @@ export default function Footer() {
   const navigate = useNavigate()
 
   const scrollTo = (id: string) => {
-    if (window.location.pathname.includes('/blogs') || window.location.pathname.includes('/faq') || window.location.pathname.includes('/privacy') || window.location.pathname.includes('/terms')) {
+    const isSubPage = ['/blogs', '/faq', '/privacy', '/terms'].some(p => window.location.pathname.includes(p))
+    if (isSubPage) {
       navigate('/')
       setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350)
     } else {
@@ -26,6 +27,14 @@ export default function Footer() {
     { icon: 'ph:linkedin-logo-bold', label: 'LinkedIn', href: 'https://www.linkedin.com/company/mummaverse' },
   ]
 
+  const QUICK_LINKS = [
+    { label: 'Home', action: () => { navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
+    { label: 'Blogs', action: () => goTo('/blogs') },
+    { label: 'FAQ', action: () => goTo('/faq') },
+    { label: 'Privacy Policy', action: () => goTo('/privacy') },
+    { label: 'Terms of Service', action: () => goTo('/terms') },
+  ]
+
   return (
     <footer className="relative border-t bg-white/70" style={{ borderColor: 'rgba(217,119,87,0.1)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -44,37 +53,48 @@ export default function Footer() {
           </div>
 
           <nav>
-            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Pariverse</h4>
+            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Quick Links</h4>
             <ul className="space-y-2.5">
-              {[['features', 'Meal Planning'], ['features', 'Nutrition'], ['features', 'First Aid'], ['features', 'Community']].map(([id, item]) => (
-                <li key={item}><button onClick={() => scrollTo(id)} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">{item}</button></li>
+              {QUICK_LINKS.map(({ label, action }) => (
+                <li key={label}>
+                  <button onClick={action} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">
+                    {label}
+                  </button>
+                </li>
               ))}
             </ul>
           </nav>
 
           <nav>
-            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Ecosystem</h4>
+            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Features</h4>
             <ul className="space-y-2.5">
-              <li><button onClick={() => scrollTo('features')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Pariverse</button></li>
-              <li><span className="text-[15px] font-semibold text-[#9c8b7e]">Eduverse — Soon</span></li>
-              <li><span className="text-[15px] font-semibold text-[#9c8b7e]">Selfverse — Soon</span></li>
-              <li><button onClick={() => goTo('/blogs')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Blog</button></li>
+              {[
+                ['features', 'Meal Planning'],
+                ['features', 'Nutrition'],
+                ['features', 'First Aid'],
+                ['features', 'Community'],
+                ['features', 'Chore Board'],
+              ].map(([id, label]) => (
+                <li key={label}>
+                  <button onClick={() => scrollTo(id)} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">{label}</button>
+                </li>
+              ))}
             </ul>
           </nav>
 
           <nav>
-            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Company</h4>
+            <h4 className="text-[11px] uppercase tracking-widest font-extrabold text-[#8B7355] mb-4">Our Apps</h4>
             <ul className="space-y-2.5">
+              <li><button onClick={() => scrollTo('features')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Pariverse</button></li>
+              <li><span className="text-[15px] font-semibold text-[#9c8b7e]">Eduverse — Soon</span></li>
+              <li><span className="text-[15px] font-semibold text-[#9c8b7e]">Selfverse — Soon</span></li>
               <li><a href="mailto:pariverse94@gmail.com" className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Contact</a></li>
-              <li><button onClick={() => goTo('/privacy')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Privacy Policy</button></li>
-              <li><button onClick={() => goTo('/terms')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">Terms of Service</button></li>
-              <li><button onClick={() => goTo('/faq')} className="text-[15px] font-semibold text-[#6b5c50] hover:text-[#D97757] transition-colors">FAQ</button></li>
             </ul>
           </nav>
         </div>
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-5 pt-8 border-t" style={{ borderColor: 'rgba(217,119,87,0.1)' }}>
-          <p className="text-[13px] font-semibold text-[#9c8b7e]">© 2025 Mummaverse. Made with love for Indian moms.</p>
+          <p className="text-[13px] font-semibold text-[#9c8b7e]">© 2026 Pariverse. Made with love for Indian moms.</p>
           <div className="flex items-center gap-4">
             {SOCIAL.map(({ icon, label, href }) => (
               <a

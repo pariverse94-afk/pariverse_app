@@ -271,7 +271,7 @@ export default function Hero() {
                 <Icon icon="ph:hand-waving-bold" className="text-lg" />
                 Join Waitlist — Free
               </a>
-              <a href={WAITLIST_URL} target="_blank" rel="noreferrer" className="btn-outline font-extrabold text-[15px] px-7 py-3.5 rounded-2xl inline-flex items-center justify-center gap-2">
+              <a href="#" className="btn-outline font-extrabold text-[15px] px-7 py-3.5 rounded-2xl inline-flex items-center justify-center gap-2">
                 <Icon icon="ph:google-play-logo-bold" className="text-lg" />
                 Play Store (Beta)
               </a>

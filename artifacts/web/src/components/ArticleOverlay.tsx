@@ -84,10 +84,17 @@ export default function ArticleOverlay({ articleId, onClose }: { articleId: numb
           <div dangerouslySetInnerHTML={{ __html: article.content }} />
 
           <div className={`mt-10 p-6 rounded-xl ${article.ctaBg} border text-center`}>
-            <p className="text-[15px] text-[#4A3728] mb-4">{article.ctaText}</p>
-            <a href={WAITLIST_URL} target="_blank" rel="noreferrer" onClick={onClose} className="btn-primary text-[15px] font-semibold px-6 py-3 rounded-xl inline-flex items-center gap-2">
-              Join the Waitlist <Icon icon="ph:arrow-up-right-bold" className="text-base" />
-            </a>
+            <p className="text-[15px] text-[#4A3728] mb-5">{article.ctaText}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a href={WAITLIST_URL} target="_blank" rel="noreferrer" onClick={onClose} className="btn-primary text-[15px] font-extrabold px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2">
+                <Icon icon="ph:hand-waving-bold" className="text-base" />
+                Join Waitlist — Free
+              </a>
+              <a href="#" onClick={onClose} className="btn-outline text-[15px] font-extrabold px-6 py-3 rounded-xl inline-flex items-center justify-center gap-2">
+                <Icon icon="ph:google-play-logo-bold" className="text-base" />
+                Get it on Play Store
+              </a>
+            </div>
           </div>
         </div>
       )}
