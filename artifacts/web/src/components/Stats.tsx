@@ -16,7 +16,7 @@ export default function Stats() {
         <div ref={ref} className="grid grid-cols-2 md:grid-cols-4 gap-8 reveal">
           {STATS.map(({ value, label, highlight }) => (
             <div key={label} className="stat-item text-center">
-              <div className={`text-3xl md:text-4xl font-medium mb-1 ${highlight ? 'text-orange-600' : 'text-[#2C1810]'}`} style={{ fontFamily: "'Oswald', sans-serif" }}>{value}</div>
+              <div className={`text-3xl md:text-4xl font-medium mb-1 ${highlight ? 'text-orange-600' : 'text-[#2C1810]'}`} style={{ fontFamily: "'Nunito', sans-serif" }}>{value}</div>
               <div className="text-[13px] uppercase tracking-[.15em] text-[#8B7355]">{label}</div>
             </div>
           ))}

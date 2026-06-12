@@ -71,6 +71,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "@iconify/react": "^6.0.2"
+    "@iconify/react": "^6.0.2",
+    "react-router-dom": "^7.17.0"
   }
 }

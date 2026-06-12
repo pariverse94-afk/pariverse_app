@@ -266,7 +266,7 @@ function FeatureCard({ AnimComp, iconBg, icon, iconColor, tagColor, tag, title, 
             <Icon icon={icon} className={`${iconColor} text-xl`} />
           </div>
           <div>
-            <h3 className="text-xl md:text-2xl font-medium uppercase tracking-tight mb-1 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>{title}</h3>
+            <h3 className="text-xl md:text-2xl font-medium uppercase tracking-tight mb-1 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>{title}</h3>
             <span className={`text-[12px] ${tagColor} uppercase tracking-widest`}>{tag}</span>
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function Features() {
             <Icon icon="ph:sparkle-bold" className="text-orange-600 text-[15px]" />
             <span className="text-[12px] font-medium text-orange-700 uppercase tracking-widest">What Pariverse Does</span>
           </div>
-          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             Your Home, <span className="text-orange-600">Finally</span> Organised
           </h2>
         </div>

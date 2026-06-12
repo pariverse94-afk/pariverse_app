@@ -101,7 +101,7 @@ export default function Village() {
                   >
                     <Icon icon={tile.icon} style={{ color: tile.iconColor, fontSize: 28 }} className="float-slow" />
                   </div>
-                  <div className="text-4xl font-bold mb-2" style={{ color: tile.iconColor, fontFamily: "'Oswald', sans-serif" }}>
+                  <div className="text-4xl font-bold mb-2" style={{ color: tile.iconColor, fontFamily: "'Nunito', sans-serif" }}>
                     {tile.stat}
                   </div>
                   <p className="text-[15px] text-[#6b5c50] leading-snug font-medium" style={{ whiteSpace: 'pre-line' }}>{tile.label}</p>
@@ -116,7 +116,7 @@ export default function Village() {
               <Icon icon="ph:heart-bold" className="text-orange-600 text-[15px]" />
               <span className="text-[12px] font-medium text-orange-700 uppercase tracking-widest">The Village</span>
             </div>
-            <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+            <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
               We Lost Our Villages.<br /><span className="text-orange-600">Let Us Rebuild Them.</span>
             </h2>
             <div className="space-y-4 text-[15px] md:text-[17px] text-[#6b5c50] leading-relaxed">

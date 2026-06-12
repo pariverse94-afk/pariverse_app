@@ -83,7 +83,7 @@ function BlogCard({ article, onOpen, delay, large }: { article: Article; onOpen:
             <span className="text-[13px] text-[#9c8b7e]">-</span>
             <span className="text-[13px] text-[#9c8b7e]">{readTime} read</span>
           </div>
-          <h3 className="text-2xl md:text-3xl font-medium uppercase tracking-tight mb-4 leading-tight text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>{title}</h3>
+          <h3 className="text-2xl md:text-3xl font-medium uppercase tracking-tight mb-4 leading-tight text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>{title}</h3>
           <p className="text-[17px] text-[#6b5c50] leading-relaxed">{summary}</p>
         </div>
       </article>
@@ -101,7 +101,7 @@ function BlogCard({ article, onOpen, delay, large }: { article: Article; onOpen:
           <span className="text-[13px] text-[#9c8b7e]">-</span>
           <time className="text-[13px] text-[#9c8b7e]">{date}</time>
         </div>
-        <h3 className="text-xl font-medium uppercase tracking-tight mb-3 leading-tight text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>{title}</h3>
+        <h3 className="text-xl font-medium uppercase tracking-tight mb-3 leading-tight text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>{title}</h3>
         <p className="text-[15px] text-[#6b5c50] leading-relaxed">{summary}</p>
       </div>
     </article>
@@ -119,7 +119,7 @@ export default function Blog({ onOpenArticle }: { onOpenArticle: (id: number) =>
             <Icon icon="ph:article-bold" className="text-orange-600 text-[15px]" />
             <span className="text-[12px] font-medium text-orange-700 uppercase tracking-widest">From the Blog</span>
           </div>
-          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             Real Talk. <span className="text-orange-600">Real Help.</span>
           </h2>
           <p className="text-[17px] text-[#6b5c50] mt-3 max-w-lg">Honest, research-backed articles for Indian moms. Click any article to read the full piece.</p>

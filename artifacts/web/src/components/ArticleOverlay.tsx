@@ -77,7 +77,7 @@ export default function ArticleOverlay({ articleId, onClose }: { articleId: numb
             <span className="text-[11px] text-[#9c8b7e]">{article.readTime} read</span>
           </div>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-medium uppercase leading-[.95] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-medium uppercase leading-[.95] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             {article.title}
           </h1>
 

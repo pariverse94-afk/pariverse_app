@@ -20,14 +20,14 @@ export default function Waitlist() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
                   <Icon icon="ph:planet-bold" className="text-white text-sm" />
                 </div>
-                <span className="text-[15px] font-medium tracking-wider uppercase text-[#8B7355]" style={{ fontFamily: "'Oswald', sans-serif" }}>From Mummaverse</span>
+                <span className="text-[15px] font-medium tracking-wider uppercase text-[#8B7355]" style={{ fontFamily: "'Nunito', sans-serif" }}>From Mummaverse</span>
               </div>
 
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mx-auto mb-6 pulse-glow-slow">
                 <Icon icon="ph:house-simple-bold" className="text-white text-3xl" />
               </div>
 
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium uppercase tracking-tight mb-3 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>Your Village is Waiting</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium uppercase tracking-tight mb-3 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>Your Village is Waiting</h2>
               <p className="text-[17px] text-[#6b5c50] leading-relaxed mb-8 max-w-md mx-auto">
                 Join 1,000+ Indian moms on the waitlist. Be among the first to experience Pariverse.
               </p>

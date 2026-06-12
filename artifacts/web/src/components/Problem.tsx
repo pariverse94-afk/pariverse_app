@@ -262,7 +262,7 @@ export default function Problem() {
             <Icon icon="ph:heart-break-bold" className="text-orange-600 text-[15px]" />
             <span className="text-[12px] font-medium text-orange-700 uppercase tracking-widest">The Real Problem</span>
           </div>
-          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             You Are Not Failing.<br /><span className="text-orange-600">The System Is.</span>
           </h2>
           <p className="text-[17px] md:text-lg text-[#6b5c50] leading-relaxed max-w-2xl mx-auto">

@@ -58,7 +58,7 @@ export default function HowItWorks() {
             <Icon icon="ph:path-bold" className="text-orange-600 text-[15px]" />
             <span className="text-[12px] font-medium text-orange-700 uppercase tracking-widest">How It Works</span>
           </div>
-          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             Three Steps to a <span className="text-orange-600">Lighter Home</span>
           </h2>
         </div>
@@ -116,7 +116,7 @@ export default function HowItWorks() {
                   </div>
                 </div>
 
-                <h3 className="text-xl font-medium uppercase tracking-tight mb-3 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>{step.title}</h3>
+                <h3 className="text-xl font-medium uppercase tracking-tight mb-3 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>{step.title}</h3>
                 <p className="text-[15px] text-[#6b5c50] leading-relaxed">{step.desc}</p>
 
                 {/* Connector arrow on mobile */}

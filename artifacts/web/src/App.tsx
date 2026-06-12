@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from './context/ThemeContext'
 
@@ -18,6 +19,31 @@ import Waitlist from './components/Waitlist'
 import Footer from './components/Footer'
 import ArticleOverlay from './components/ArticleOverlay'
 
+import BlogPage from './pages/BlogPage'
+import FAQPage from './pages/FAQPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+
+function HomePage({ onOpenArticle }: { onOpenArticle: (id: number) => void }) {
+  return (
+    <main id="main-page">
+      <Hero />
+      <Stats />
+      <Problem />
+      <Features />
+      <HowItWorks />
+      <Village />
+      <Chores />
+      <Blog onOpenArticle={onOpenArticle} />
+      <Ecosystem />
+      <Testimonial />
+      <FAQ />
+      <Waitlist />
+      <Footer />
+    </main>
+  )
+}
+
 export default function App() {
   const [articleId, setArticleId] = useState<number | null>(null)
 
@@ -35,21 +61,13 @@ export default function App() {
   return (
     <ThemeProvider>
       <Navbar onLogoClick={closeArticle} />
-      <main id="main-page">
-        <Hero />
-        <Stats />
-        <Problem />
-        <Features />
-        <HowItWorks />
-        <Village />
-        <Chores />
-        <Blog onOpenArticle={openArticle} />
-        <Ecosystem />
-        <Testimonial />
-        <FAQ />
-        <Waitlist />
-        <Footer />
-      </main>
+      <Routes>
+        <Route path="/" element={<HomePage onOpenArticle={openArticle} />} />
+        <Route path="/blogs" element={<BlogPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+      </Routes>
       <ArticleOverlay articleId={articleId} onClose={closeArticle} />
     </ThemeProvider>
   )

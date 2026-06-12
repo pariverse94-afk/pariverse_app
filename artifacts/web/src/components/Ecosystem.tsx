@@ -43,7 +43,7 @@ export default function Ecosystem() {
             <Icon icon="ph:planet-bold" className="text-orange-600 text-[15px]" />
             <span className="text-[12px] font-medium text-[#8B7355] uppercase tracking-widest">By Mummaverse</span>
           </div>
-          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] lg:text-[3.25rem] font-medium uppercase leading-[.9] tracking-tight mb-4 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             One Company. <span className="text-orange-600">Many Solutions.</span>
           </h2>
         </div>
@@ -58,7 +58,7 @@ export default function Ecosystem() {
                   <Icon icon="ph:house-simple-bold" className="text-white text-lg" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium uppercase text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>Pariverse</h3>
+                  <h3 className="text-lg font-medium uppercase text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>Pariverse</h3>
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-orange-600">Home Management</span>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export default function Ecosystem() {
                   <Icon icon="ph:graduation-cap-bold" className="text-[#8B7355] text-lg" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium uppercase text-[#8B7355]" style={{ fontFamily: "'Oswald', sans-serif" }}>Eduverse</h3>
+                  <h3 className="text-lg font-medium uppercase text-[#8B7355]" style={{ fontFamily: "'Nunito', sans-serif" }}>Eduverse</h3>
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8b7e]">Learning</span>
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function Ecosystem() {
                   <Icon icon="ph:heart-half-bold" className="text-[#8B7355] text-lg" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium uppercase text-[#8B7355]" style={{ fontFamily: "'Oswald', sans-serif" }}>Selfverse</h3>
+                  <h3 className="text-lg font-medium uppercase text-[#8B7355]" style={{ fontFamily: "'Nunito', sans-serif" }}>Selfverse</h3>
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8b7e]">Wellbeing</span>
                 </div>
               </div>

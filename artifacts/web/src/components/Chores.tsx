@@ -16,7 +16,7 @@ export default function Chores() {
     <section className="relative py-24 md:py-32 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={headRef} className="max-w-3xl mx-auto text-center mb-14 reveal">
-          <h2 className="text-3xl md:text-[2.75rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Oswald', sans-serif" }}>
+          <h2 className="text-3xl md:text-[2.75rem] font-medium uppercase leading-[.9] tracking-tight mb-6 text-[#2C1810]" style={{ fontFamily: "'Nunito', sans-serif" }}>
             Chores Are Not "Mom's Job".<br /><span className="text-orange-600">That Is the New Normal.</span>
           </h2>
         </div>
