@@ -1,0 +1,183 @@
+Redesign the entire website to feel modern, warm, premium, and emotionally engaging for urban Indian mothers and nuclear families.
+
+## Landing Page Redesign
+
+### Hero Section (Above the Fold)
+
+Remove the current hero section completely.
+
+Replace it with a large animated scene occupying most of the screen height.
+
+Create 4 animated family scenes that automatically transition every 3-4 seconds with smooth fade animations:
+
+1. Mother organizing household chores while managing daily tasks.
+2. Parents and children collaborating on household chores together.
+3. Family planning weekly household activities and responsibilities.
+4. Happy family enjoying quality time because household work is organized.
+
+The animation style should be soft, friendly, modern, slightly illustrated, and emotionally warm. Avoid corporate or stock-photo aesthetics.
+
+Overlay a simple headline:
+
+**"Making Family Life Easier, Together."**
+
+Subheadline:
+
+**"Organize chores, coordinate responsibilities, and build happier homes."**
+
+Below the headline add two prominent CTA buttons:
+
+Primary Button:
+**Join Waitlist**
+
+Secondary Button:
+**Get it on Play Store**
+
+Buttons should remain visible on all screen sizes.
+
+---
+
+## Testimonials Section
+
+Immediately below the hero section add a testimonials section.
+
+Display 3-6 testimonial cards with:
+
+* Soft shadows
+* Rounded corners
+* Family-oriented design
+* Parent profile image/avatar
+* Name
+* Short testimonial text
+
+Use a clean carousel on mobile.
+
+---
+
+## Blogs
+
+Remove the blog section from the homepage.
+
+Create a dedicated page:
+
+`/blogs`
+
+Move all blog content there.
+
+At the end of every blog article add two CTA buttons:
+
+* Join Waitlist
+* Get it on Play Store
+
+These CTAs should appear prominently after the article content.
+
+---
+
+## FAQs
+
+Remove FAQs from the homepage.
+
+Create a dedicated page:
+
+`/faq`
+
+Move all existing FAQs there.
+
+Add search and accordion functionality for FAQ items.
+
+---
+
+## Footer
+
+Create a professional footer containing:
+
+### Copyright
+
+© 2026 [App Name]. All Rights Reserved.
+
+### Quick Links
+
+* Home
+* Blogs
+* FAQ
+* Privacy Policy
+* Terms of Service
+
+### Social Media Links
+
+Add icons and links for:
+
+* Instagram
+* Facebook
+* YouTube
+* X (Twitter)
+* LinkedIn
+
+Open social links in new tabs.
+
+---
+
+## Typography
+
+Replace current fonts with softer, friendlier fonts.
+
+Recommended options:
+
+* Nunito
+* Quicksand
+* Poppins
+* Comfortaa
+
+Use:
+
+* Soft rounded headings
+* Highly readable body text
+* Consistent font hierarchy
+
+---
+
+## Color Palette
+
+Current colors feel too harsh.
+
+Use a cozy, warm, family-friendly palette:
+
+Primary:
+#D97757 (Warm Terracotta)
+
+Secondary:
+#F4E7DA (Soft Cream)
+
+Accent:
+#F7C59F (Peach)
+
+Background:
+#FFFDF9
+
+Text:
+#4A4A4A
+
+Success:
+#7AA874 (Soft Sage Green)
+
+Avoid bright blues, neon colors, and corporate-looking gradients.
+
+---
+
+## Design Style
+
+Overall design direction:
+
+* Cozy
+* Modern
+* Trustworthy
+* Family-centric
+* Emotionally warm
+* Clean whitespace
+* Rounded corners
+* Subtle animations
+* Mobile-first responsive design
+
+The website should feel closer to a premium parenting/family lifestyle brand rather than a productivity SaaS product.
+
+Maintain excellent accessibility, responsive behavior, and performance.
