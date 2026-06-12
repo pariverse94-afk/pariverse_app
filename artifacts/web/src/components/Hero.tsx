@@ -214,16 +214,52 @@ export default function Hero() {
 
           {/* Right: hero illustration */}
           <div className="anim-in-d3 hidden lg:flex items-center justify-center">
-            <div className="relative float-slow" style={{ width: 520, height: 520 }}>
-              {/* Soft radial glow behind image */}
-              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(234,88,12,.13) 0%, rgba(251,146,60,.07) 45%, transparent 72%)' }} />
-              <img
-                src={`${import.meta.env.BASE_URL}images/hero-community.png`}
-                alt="Moms coming together — the Pariverse village"
-                className="relative z-10 w-full h-full object-contain drop-shadow-xl"
-              />
+            <div className="relative float-slow" style={{ width: 480, height: 480 }}>
+              {/* Soft radial glow behind */}
+              <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(234,88,12,.18) 0%, rgba(251,146,60,.09) 50%, transparent 75%)' }} />
+
+              {/* Outer rotating dashed ring */}
+              <div className="absolute inset-0 rounded-full" style={{
+                border: '2.5px dashed rgba(234,88,12,0.35)',
+                animation: 'spinSlow 18s linear infinite',
+              }} />
+
+              {/* Inner rotating solid ring with dots */}
+              <div className="absolute" style={{
+                inset: 18,
+                borderRadius: '50%',
+                border: '2px solid rgba(234,88,12,0.18)',
+                animation: 'spinReverse 12s linear infinite',
+              }}>
+                {[0, 90, 180, 270].map((angle, i) => {
+                  const rad = (angle * Math.PI) / 180
+                  const r = 50
+                  const x = 50 + r * Math.cos(rad)
+                  const y = 50 + r * Math.sin(rad)
+                  return (
+                    <div key={i} className="absolute w-3 h-3 rounded-full bg-orange-400/70 border border-white shadow-sm" style={{
+                      left: `calc(${x}% - 6px)`,
+                      top: `calc(${y}% - 6px)`,
+                    }} />
+                  )
+                })}
+              </div>
+
+              {/* Circular image */}
+              <div className="absolute rounded-full overflow-hidden shadow-2xl" style={{
+                inset: 36,
+                border: '4px solid rgba(234,88,12,0.2)',
+                background: 'rgba(255,248,240,0.5)',
+              }}>
+                <img
+                  src={`${import.meta.env.BASE_URL}images/hero-community.png`}
+                  alt="Moms coming together — the Pariverse village"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
               {/* Brand label */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-sm border border-orange-200/40 shadow-sm">
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-sm border border-orange-200/40 shadow-sm">
                 <div className="w-2 h-2 rounded-full bg-orange-500 pulse-glow" />
                 <span className="text-[11px] font-semibold text-[#92400E] uppercase tracking-widest whitespace-nowrap">Your Village, Online</span>
               </div>
