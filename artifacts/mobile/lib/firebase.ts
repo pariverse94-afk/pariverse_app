@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, initializeAuth } from "firebase/auth";
+import { Platform } from "react-native";
 
 const firebaseConfig = {
   apiKey:            process.env.EXPO_PUBLIC_FIREBASE_API_KEY            ?? "",
@@ -13,20 +14,25 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// firebase/auth's web TypeScript types don't export getReactNativePersistence —
-// it lives under the react-native condition which Metro resolves at build time.
-// We access it via require() so TypeScript is satisfied while Metro still picks
-// up the correct React Native bundle.
+// On web, Firebase automatically uses localStorage persistence — getAuth() is enough.
+// On native, we wire AsyncStorage persistence via initializeAuth().
+// getReactNativePersistence is not exported from firebase/auth's web TypeScript types,
+// so we access it via require() which Metro resolves to the react-native bundle.
 let _auth: ReturnType<typeof getAuth>;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-  const { getReactNativePersistence } = require("firebase/auth") as any;
-  _auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} catch {
-  // Falls back to in-memory auth if initializeAuth was already called (hot reload).
+
+if (Platform.OS === "web") {
   _auth = getAuth(app);
+} else {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+    const { getReactNativePersistence } = require("firebase/auth") as any;
+    _auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  } catch {
+    // initializeAuth already called on hot-reload — reuse the existing auth instance.
+    _auth = getAuth(app);
+  }
 }
 
 export const auth = _auth;
