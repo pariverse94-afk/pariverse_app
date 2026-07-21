@@ -8,7 +8,9 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "44f16c47-f1c5-4be0-88cf-24ff3f8eb62e-00-2k21yw1l4klb.expo.riker.replit.dev"
+        "EXPO_PUBLIC_DOMAIN": "44f16c47-f1c5-4be0-88cf-24ff3f8eb62e-00-2k21yw1l4klb.expo.riker.replit.dev",
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY"
       }
     },
     "preview": {
@@ -17,7 +19,9 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "pariverse-api-production.up.railway.app"
+        "EXPO_PUBLIC_DOMAIN": "pariverse-api-production.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY"
       }
     },
     "production": {
@@ -25,7 +29,9 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "pariverse-api-production.up.railway.app"
+        "EXPO_PUBLIC_DOMAIN": "pariverse-api-production.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "REPLACE_WITH_YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "REPLACE_WITH_YOUR_SUPABASE_ANON_KEY"
       }
     }
   },
