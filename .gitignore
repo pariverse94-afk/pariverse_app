@@ -47,3 +47,22 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Google Cloud / Firebase secrets — NEVER commit these
+google-services.json
+GoogleService-Info.plist
+artifacts/mobile/google-services.json
+artifacts/mobile/GoogleService-Info.plist
+google-play-key.json
+*-service-account*.json
+firebase-adminsdk-*.json
+
+# Terraform state (contains secrets in plaintext)
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfplan
+
+# Local overrides (safe to have locally, not in git)
+infra/terraform.tfvars.local
