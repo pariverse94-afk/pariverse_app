@@ -79,50 +79,51 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    // Google Sign-In requires your Firebase project to be configured.
-    // After completing infra/firebase-setup.md:
-    //   1. Enable Google provider in Firebase Console → Authentication → Sign-in method
-    //   2. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in eas.json
-    //   3. Rebuild the app with: eas build --platform android --profile production
-    const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-    if (!googleClientId) {
-      setError(
-        "Google Sign-In is not yet configured.\n" +
-        "Follow infra/firebase-setup.md to enable it, then rebuild the app.",
-      );
-      return;
-    }
-
     setGoogleLoading(true);
     setError("");
 
     try {
-      // Build the Google OAuth URL (implicit + code hybrid for ID token)
-      const redirectUrl = Linking.createURL("/");
-      const nonce = Math.random().toString(36).slice(2);
-      const params = new URLSearchParams({
-        client_id:     googleClientId,
-        redirect_uri:  redirectUrl,
-        response_type: "id_token",
-        scope:         "email profile openid",
-        nonce,
-      });
+      if (Platform.OS === "web") {
+        // On web, use Firebase's signInWithPopup — it routes through
+        // pariverse-prod.firebaseapp.com which is pre-registered with Google,
+        // so no redirect_uri_mismatch.
+        const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } else {
+        // On native (iOS/Android), use the deep-link OAuth flow.
+        const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+        if (!googleClientId) {
+          setError("Google Sign-In is not yet configured. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.");
+          return;
+        }
 
-      const result = await WebBrowser.openAuthSessionAsync(
-        `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
-        redirectUrl,
-      );
+        const redirectUrl = Linking.createURL("/");
+        const nonce = Math.random().toString(36).slice(2);
+        const params = new URLSearchParams({
+          client_id:     googleClientId,
+          redirect_uri:  redirectUrl,
+          response_type: "id_token",
+          scope:         "email profile openid",
+          nonce,
+        });
 
-      if (result.type === "success" && result.url) {
-        const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
-        const hash = result.url.split("#")[1] ?? "";
-        const p = new URLSearchParams(hash);
-        const idToken = p.get("id_token");
-        if (idToken) {
-          const credential = GoogleAuthProvider.credential(idToken);
-          await signInWithCredential(auth, credential);
-        } else {
-          setError("Google Sign-In failed. Please try email sign-in.");
+        const result = await WebBrowser.openAuthSessionAsync(
+          `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+          redirectUrl,
+        );
+
+        if (result.type === "success" && result.url) {
+          const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
+          const hash = result.url.split("#")[1] ?? "";
+          const p = new URLSearchParams(hash);
+          const idToken = p.get("id_token");
+          if (idToken) {
+            const credential = GoogleAuthProvider.credential(idToken);
+            await signInWithCredential(auth, credential);
+          } else {
+            setError("Google Sign-In failed. Please try email sign-in.");
+          }
         }
       }
     } catch (err: any) {
