@@ -1,0 +1,3 @@
+- [Metro _tmp_ blockList](metro-tmp-blocklist.md) — Metro ENOENT crashes on pnpm packages that create then delete _tmp_N dirs during install; must block them in metro.config.js.
+- [Drizzle duplicate instance via OpenTelemetry](drizzle-otel-dedup.md) — firebase-admin introduces @opentelemetry/api, causing pnpm to create two drizzle-orm peer-dep variants; fix with workspace override.
+- [Firebase Auth migration pattern](firebase-auth-pattern.md) — full stack Firebase Auth replacing Supabase: mobile (firebase JS SDK + initializeAuth + AsyncStorage persistence), API (firebase-admin verifyIdToken middleware).

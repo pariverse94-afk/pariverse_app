@@ -214,6 +214,10 @@ resource "google_cloud_run_v2_service" "api" {
         name  = "GCS_BUCKET"
         value = google_storage_bucket.uploads.name
       }
+      env {
+        name  = "FIREBASE_PROJECT_ID"
+        value = var.project_id
+      }
 
       resources {
         limits = {
