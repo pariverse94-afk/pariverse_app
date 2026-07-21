@@ -15,11 +15,22 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pariverse.app"
+      "bundleIdentifier": "com.pariverse.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.51629814454-dasorsubaof12gvqlgo51jaba0jq77gg"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "package": "com.pariverse.app",
       "versionCode": 2,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#FFF8F0"

@@ -152,6 +152,14 @@ resource "google_secret_manager_secret" "db_url" {
   replication { auto {} }
 }
 
+resource "google_secret_manager_secret" "firebase_admin" {
+  depends_on = [google_project_service.apis]
+  secret_id  = "firebase-admin-key"
+  replication { auto {} }
+  # Populate this secret manually after Terraform apply:
+  #   gcloud secrets versions add firebase-admin-key --data-file=/path/to/serviceAccountKey.json
+}
+
 resource "google_secret_manager_secret_version" "db_url_v1" {
   secret      = google_secret_manager_secret.db_url.id
   # Cloud Run connects via Unix socket when Cloud SQL Auth Proxy is used
@@ -217,6 +225,15 @@ resource "google_cloud_run_v2_service" "api" {
       env {
         name  = "FIREBASE_PROJECT_ID"
         value = var.project_id
+      }
+      env {
+        name = "FIREBASE_SERVICE_ACCOUNT_JSON"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.firebase_admin.secret_id
+            version = "latest"
+          }
+        }
       }
 
       resources {
