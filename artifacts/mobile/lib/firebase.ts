@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, getReactNativePersistence, initializeAuth } from "firebase/auth";
+import { getAuth, initializeAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey:            process.env.EXPO_PUBLIC_FIREBASE_API_KEY            ?? "",
@@ -13,14 +13,19 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// initializeAuth (with AsyncStorage persistence) must only be called once.
-// On hot-reload or re-evaluation, fall back to getAuth() which returns the existing instance.
-let _auth: ReturnType<typeof initializeAuth>;
+// firebase/auth's web TypeScript types don't export getReactNativePersistence —
+// it lives under the react-native condition which Metro resolves at build time.
+// We access it via require() so TypeScript is satisfied while Metro still picks
+// up the correct React Native bundle.
+let _auth: ReturnType<typeof getAuth>;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+  const { getReactNativePersistence } = require("firebase/auth") as any;
   _auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
 } catch {
+  // Falls back to in-memory auth if initializeAuth was already called (hot reload).
   _auth = getAuth(app);
 }
 

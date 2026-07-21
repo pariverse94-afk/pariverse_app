@@ -273,7 +273,7 @@ export default function ProfileScreen() {
                 {profile?.name ?? "—"}
               </Text>
               <Text style={[styles.userEmail, { color: colors.mutedForeground }]}>
-                {session?.user?.email ?? profile?.email ?? "No email"}
+                {session?.email ?? profile?.email ?? "No email"}
               </Text>
               <Text style={[styles.userFamily, { color: colors.mutedForeground }]}>
                 {profile?.familyName ?? ""}
