@@ -15,8 +15,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useMeals, type DayKey, type MealSlot, type MealEntry } from "@/context/MealContext";
-import { useGenerateMealPlan } from "@workspace/api-client-react";
-
 const MEAL_TYPES = [
   { key: "breakfast" as const, label: "Breakfast" },
   { key: "lunch" as const, label: "Lunch" },
@@ -54,18 +52,7 @@ export default function MealSuggestScreen() {
   const [nutritionSummary, setNutritionSummary] = useState("");
   const [tips, setTips] = useState("");
 
-  const { mutate: generatePlan, isPending } = useGenerateMealPlan({
-    mutation: {
-      onSuccess: (data) => {
-        setSuggestions(data.meals ?? []);
-        setNutritionSummary(data.nutritionSummary ?? "");
-        setTips(data.tips ?? "");
-      },
-      onError: (err) => {
-        Alert.alert("AI Error", "Could not generate meal suggestions. Please try again.");
-      },
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -77,19 +64,90 @@ export default function MealSuggestScreen() {
     setLocalGoals((prev) => prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]);
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setPreferences(localPrefs);
     setNutritionalGoals(localGoals);
     setSuggestions([]);
-    generatePlan({
-      data: {
-        preferences: localPrefs,
-        inventory: localInventory,
-        familySize: parseInt(familySize) || 4,
-        nutritionalGoals: localGoals,
-        mealType: selectedType,
-      },
-    });
+    setNutritionSummary("");
+    setTips("");
+
+    const apiKey = process.env.EXPO_PUBLIC_GROQ_API_KEY;
+    if (!apiKey) {
+      Alert.alert("AI not configured", "EXPO_PUBLIC_GROQ_API_KEY is missing.");
+      return;
+    }
+
+    setIsPending(true);
+    try {
+      const prefsText = localPrefs.length > 0 ? localPrefs.join(", ") : "no specific preferences";
+      const goalsText = localGoals.length > 0 ? localGoals.join(", ") : "balanced nutrition";
+      const inventoryText = localInventory.slice(0, 20).join(", ");
+      const mealCount = selectedType === "weekly" ? "7 different meals (one for each day)" : "3 different meal options";
+      const mealTypeLabel = selectedType === "weekly" ? "diverse weekly meals" : `${selectedType} options`;
+      const parsedFamilySize = parseInt(familySize) || 4;
+
+      const prompt = `You are a nutritionist specializing in Indian home cooking for urban Indian families.
+
+Generate ${mealCount} for ${mealTypeLabel} for a family of ${parsedFamilySize}.
+
+Dietary preferences: ${prefsText}
+Available pantry ingredients: ${inventoryText}
+Nutritional goals: ${goalsText}
+
+Requirements:
+- Use authentic Indian recipes with Hindi names where applicable
+- Prioritize using available pantry ingredients
+- Make meals practical for busy working parents
+- Include a mix of regions (North Indian, South Indian, etc.) when relevant
+- Ensure child-friendly options
+
+Respond with valid JSON only, no markdown, no extra text. Use this exact format:
+{
+  "meals": [
+    {
+      "name": "Palak Dal",
+      "nameHindi": "पालक दाल",
+      "description": "Protein-rich spinach lentil soup, perfect for growing children",
+      "ingredients": ["spinach", "toor dal", "tomatoes", "garlic", "turmeric"],
+      "prepTime": "25 min",
+      "nutritionHighlights": "High protein, Iron rich",
+      "servings": 4
+    }
+  ],
+  "nutritionSummary": "These meals together provide a balanced mix of proteins, complex carbs, and micronutrients suitable for all ages.",
+  "tips": "Batch cook the dal on weekends and refrigerate for up to 3 days."
+}`;
+
+      const resp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 4096,
+          messages: [
+            { role: "system", content: "You are a helpful nutritionist. Always respond with valid JSON only, no markdown code blocks, no extra text." },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+
+      if (!resp.ok) throw new Error(`Groq error: ${resp.status}`);
+      const result = await resp.json();
+      const text = result.choices?.[0]?.message?.content ?? "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Could not parse AI response");
+      const parsed = JSON.parse(jsonMatch[0]);
+      setSuggestions(parsed.meals ?? []);
+      setNutritionSummary(parsed.nutritionSummary ?? "");
+      setTips(parsed.tips ?? "");
+    } catch {
+      Alert.alert("AI Error", "Could not generate meal suggestions. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleAddToPlanner = (meal: any, slot: MealSlot) => {

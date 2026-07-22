@@ -45,25 +45,50 @@ export default function FirstAidChatScreen() {
     setGuidance("");
     setSubmitted(true);
 
-    try {
-      const domain = process.env.EXPO_PUBLIC_DOMAIN;
-      const url = domain
-        ? `https://${domain}/api/ai/firstaid`
-        : "/api/ai/firstaid";
+    const apiKey = process.env.EXPO_PUBLIC_GROQ_API_KEY;
+    if (!apiKey) {
+      setError("AI not configured — EXPO_PUBLIC_GROQ_API_KEY is missing.");
+      setLoading(false);
+      return;
+    }
 
-      const response = await fetch(url, {
+    try {
+      const prompt = `You are a helpful medical information assistant for parents in India. Provide clear, actionable first aid guidance for children.
+
+Condition: ${conditionTitle ?? conditionId ?? "General"}
+Child's age: ${childAge.trim()}
+Perceived severity: ${severity}
+${additionalInfo.trim() ? `Additional context: ${additionalInfo.trim()}` : ""}
+
+Important:
+- Always start with emergency indicators — tell parents when to call 108 or go to hospital immediately
+- Provide step-by-step first aid instructions
+- Use simple, reassuring language appropriate for a worried parent
+- Reference common Indian household remedies where medically appropriate
+- End with "When to seek medical attention" section
+- Do NOT diagnose — always recommend consulting a doctor
+
+Format your response clearly with headers and numbered steps.`;
+
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
         body: JSON.stringify({
-          condition: conditionTitle ?? conditionId ?? "General",
-          childAge: childAge.trim(),
-          severity,
-          additionalInfo: additionalInfo.trim() || undefined,
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 4096,
+          stream: true,
+          messages: [
+            { role: "system", content: "You are a helpful medical information assistant for parents in India. Provide clear, reassuring, and actionable guidance." },
+            { role: "user", content: prompt },
+          ],
         }),
       });
 
       if (!response.ok || !response.body) {
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(`Groq error: ${response.status}`);
       }
 
       const reader = response.body.getReader();
@@ -78,17 +103,17 @@ export default function FirstAidChatScreen() {
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6).trim();
-            if (!data) continue;
-            try {
-              const event = JSON.parse(data);
-              if (event.content) {
-                setGuidance((prev) => prev + event.content);
-                scrollRef.current?.scrollToEnd({ animated: true });
-              }
-            } catch {}
-          }
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (!data || data === "[DONE]") continue;
+          try {
+            const event = JSON.parse(data);
+            const text = event.choices?.[0]?.delta?.content;
+            if (text) {
+              setGuidance((prev) => prev + text);
+              scrollRef.current?.scrollToEnd({ animated: true });
+            }
+          } catch {}
         }
       }
     } catch (err) {
