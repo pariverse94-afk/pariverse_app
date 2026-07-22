@@ -24,7 +24,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "REPLACE_WITH_CLOUD_RUN_URL",
+        "EXPO_PUBLIC_DOMAIN": "44f16c47-f1c5-4be0-88cf-24ff3f8eb62e-00-2k21yw1l4klb.riker.replit.dev",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "pariverse-prod",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDds5PrM5mEbo5Z1OhLuKuGeLtTF2EmAuk",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "pariverse-prod.firebaseapp.com",
