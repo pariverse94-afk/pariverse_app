@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "51629814454",
+    "project_id": "pariverse-prod",
+    "storage_bucket": "pariverse-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51629814454:android:e6b62d27ca02907c0c2c17",
+        "android_client_info": {
+          "package_name": "com.pariverse.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDds5PrM5mEbo5Z1OhLuKuGeLtTF2EmAuk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
