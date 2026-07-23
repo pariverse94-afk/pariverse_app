@@ -1,8 +1,6 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
-import { SymbolView } from "expo-symbols";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
@@ -72,60 +70,35 @@ function ClassicTabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
-            ) : (
-              <Feather name="home" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => <Feather name="home" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="meals"
         options={{
           title: "Meals",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="fork.knife" tintColor={color} size={22} />
-            ) : (
-              <Ionicons name="restaurant-outline" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => <Ionicons name="restaurant-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="community"
         options={{
           title: "Community",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.3" tintColor={color} size={22} />
-            ) : (
-              <Feather name="users" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => <Feather name="users" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="firstaid"
         options={{
           title: "First Aid",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="cross.case" tintColor={color} size={22} />
-            ) : (
-              <Ionicons name="medkit-outline" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => <Ionicons name="medkit-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="person.circle" tintColor={color} size={24} />
-            ) : (
-              <Feather name="user" size={22} color={color} />
-            ),
+          tabBarIcon: ({ color }) => <Feather name="user" size={22} color={color} />,
         }}
       />
     </Tabs>
@@ -133,7 +106,7 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
+  if (Platform.OS === "ios") {
     return <NativeTabLayout />;
   }
   return <ClassicTabLayout />;
