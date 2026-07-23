@@ -19,6 +19,10 @@ android/
 *.key
 *.mobileprovision
 
+# Firebase config files are intentionally tracked (project identifiers, not secrets)
+# google-services.json
+# GoogleService-Info.plist
+
 # Metro
 .metro-health-check*
 

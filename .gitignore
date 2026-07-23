@@ -49,10 +49,8 @@ Thumbs.db
 .local/
 
 # Google Cloud / Firebase secrets — NEVER commit these
-google-services.json
-GoogleService-Info.plist
-artifacts/mobile/google-services.json
-artifacts/mobile/GoogleService-Info.plist
+# google-services.json and GoogleService-Info.plist are intentionally tracked
+# (they are project identifiers, not private keys — security is in Firebase rules)
 google-play-key.json
 *-service-account*.json
 firebase-adminsdk-*.json
