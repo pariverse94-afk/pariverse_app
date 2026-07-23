@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "51629814454-cd93u2jbi8nq95gbif00ju1ajv1v100s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pariverse.app",
+            "certificate_hash": "e8f7b305086d440a800a1533c22ed6f86b3c121d"
+          }
+        },
+        {
           "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "51629814454-dasorsubaof12gvqlgo51jaba0jq77gg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "GoogleService-Info.plist"
+              }
             }
           ]
         }
