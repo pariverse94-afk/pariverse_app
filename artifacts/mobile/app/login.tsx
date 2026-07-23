@@ -3,8 +3,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,8 +18,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { auth } from "@/lib/firebase";
-
-WebBrowser.maybeCompleteAuthSession();
 
 function parseFirebaseError(code?: string): string {
   switch (code) {
@@ -91,40 +87,33 @@ export default function LoginScreen() {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
       } else {
-        // On native (iOS/Android), use the deep-link OAuth flow.
+        // On native (Android/iOS), use the Google Sign-In native module:
+        // the in-app account picker sheet. No browser, no redirects.
+        // Requires the app's signing SHA-1 to be registered in Firebase.
         const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
         if (!googleClientId) {
           setError("Google Sign-In is not yet configured. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.");
           return;
         }
 
-        const redirectUrl = Linking.createURL("/");
-        const nonce = Math.random().toString(36).slice(2);
-        const params = new URLSearchParams({
-          client_id:     googleClientId,
-          redirect_uri:  redirectUrl,
-          response_type: "id_token",
-          scope:         "email profile openid",
-          nonce,
-        });
+        const { GoogleSignin } = await import("@react-native-google-signin/google-signin");
+        GoogleSignin.configure({ webClientId: googleClientId });
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-        const result = await WebBrowser.openAuthSessionAsync(
-          `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
-          redirectUrl,
-        );
-
-        if (result.type === "success" && result.url) {
-          const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
-          const hash = result.url.split("#")[1] ?? "";
-          const p = new URLSearchParams(hash);
-          const idToken = p.get("id_token");
-          if (idToken) {
-            const credential = GoogleAuthProvider.credential(idToken);
-            await signInWithCredential(auth, credential);
-          } else {
-            setError("Google Sign-In failed. Please try email sign-in.");
-          }
+        const response = await GoogleSignin.signIn();
+        if (response.type === "cancelled") {
+          // User dismissed the account picker — not an error.
+          return;
         }
+
+        const idToken = response.data.idToken;
+        if (!idToken) {
+          setError("Google Sign-In failed. Please try email sign-in.");
+          return;
+        }
+
+        const { GoogleAuthProvider, signInWithCredential } = await import("firebase/auth");
+        await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
       }
     } catch (err: any) {
       setError(err?.message ?? "Google Sign-In failed. Please try email sign-in.");
