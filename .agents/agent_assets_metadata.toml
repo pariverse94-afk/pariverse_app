@@ -47,3 +47,9 @@ id = "6Jt4Ot0yGxVP0_BCPEH-K"
 uri = "file://docs/infra-requirements.md"
 type = "text"
 title = "Pariverse - Infrastructure Requirements Summary"
+
+[[outputs]]
+id = "MjXd_Rm9KoGmKiJpJBEZ2"
+uri = "file://docs/pariverse-privacy-policy.md"
+type = "text"
+title = "Pariverse Privacy Policy (ready to paste)"
