@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "51629814454",
+    "project_id": "pariverse-prod",
+    "storage_bucket": "pariverse-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51629814454:android:e6b62d27ca02907c0c2c17",
+        "android_client_info": {
+          "package_name": "com.pariverse.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "51629814454-cd93u2jbi8nq95gbif00ju1ajv1v100s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pariverse.app",
+            "certificate_hash": "e8f7b305086d440a800a1533c22ed6f86b3c121d"
+          }
+        },
+        {
+          "client_id": "51629814454-monqt00gbvefr64a5ks6nhhk9jhlks3b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pariverse.app",
+            "certificate_hash": "111b2ae4a7e408fe53831c041b28119e39c4e82c"
+          }
+        },
+        {
+          "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDds5PrM5mEbo5Z1OhLuKuGeLtTF2EmAuk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "51629814454-dasorsubaof12gvqlgo51jaba0jq77gg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "GoogleService-Info.plist"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
