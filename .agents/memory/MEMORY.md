@@ -4,3 +4,4 @@
 - [Firebase RN auth init — web vs native](firebase-rn-auth-init.md) — getReactNativePersistence not in web TS types; use Platform.OS guard + require() on native; EXPO_PUBLIC_FIREBASE_* need .env.local for dev server.
 - [EAS build debugging](eas-build-debugging.md) — never guess Gradle failures; fetch real logs via eas CLI (brotli-compressed); Reanimated 4 requires newArchEnabled true + worklets pkg.
 - [Android Google Sign-In](google-signin-android.md) — web-client+custom-scheme OAuth is blocked by Google; use native google-signin module + SHA-1 in Firebase; SHA-1 parseable from APK sig block.
+- [Legacy Supabase layer](supabase-legacy-layer.md) — old Supabase project is DNS-dead but sync code remains; crash-safe local-first pattern; family/meals/community data is device-local only.
