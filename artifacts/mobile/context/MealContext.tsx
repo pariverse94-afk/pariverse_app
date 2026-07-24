@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { onSnapshot, setDoc } from "firebase/firestore";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { stripUndefined, userDataDoc } from "@/lib/firestore";
+import { useUser } from "@/context/UserContext";
 
 export interface MealEntry {
   id: string;
@@ -24,8 +26,6 @@ interface MealContextValue {
   inventory: string[];
   preferences: string[];
   nutritionalGoals: string[];
-  userId: string | null;
-  setUserId: (id: string) => void;
   setMeal: (day: DayKey, slot: MealSlot, meal: MealEntry | undefined) => void;
   addInventoryItem: (item: string) => void;
   removeInventoryItem: (item: string) => void;
@@ -49,24 +49,46 @@ const DEFAULT_GOALS = ["High protein", "Low oil"];
 const STORAGE_KEY = "parivaar_meals_v2";
 const MealContext = createContext<MealContextValue | null>(null);
 
-export function MealProvider({ children }: { children: React.ReactNode }) {
-  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>({ ...EMPTY_PLAN });
-  const [inventory, setInventory] = useState<string[]>(DEFAULT_INVENTORY);
-  const [preferences, setPreferences] = useState<string[]>(DEFAULT_PREFERENCES);
-  const [nutritionalGoals, setNutritionalGoals] = useState<string[]>(DEFAULT_GOALS);
-  const [userId, setUserIdState] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+interface MealsState {
+  weeklyPlan: WeeklyPlan;
+  inventory: string[];
+  preferences: string[];
+  nutritionalGoals: string[];
+}
 
+const DEFAULT_STATE: MealsState = {
+  weeklyPlan: { ...EMPTY_PLAN },
+  inventory: DEFAULT_INVENTORY,
+  preferences: DEFAULT_PREFERENCES,
+  nutritionalGoals: DEFAULT_GOALS,
+};
+
+export function MealProvider({ children }: { children: React.ReactNode }) {
+  const { session } = useUser();
+  const uid = session?.uid ?? null;
+
+  const [state, setState] = useState<MealsState>(DEFAULT_STATE);
+  const [loaded, setLoaded] = useState(false);
+  const stateRef = useRef<MealsState>(DEFAULT_STATE);
+
+  function applyState(next: MealsState) {
+    stateRef.current = next;
+    setState(next);
+  }
+
+  // Load the local cache first — the app must work offline.
   useEffect(() => {
     async function load() {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
           const data = JSON.parse(stored);
-          if (data.weeklyPlan) setWeeklyPlan(data.weeklyPlan);
-          if (data.inventory) setInventory(data.inventory);
-          if (data.preferences) setPreferences(data.preferences);
-          if (data.nutritionalGoals) setNutritionalGoals(data.nutritionalGoals);
+          applyState({
+            weeklyPlan: { ...EMPTY_PLAN, ...(data.weeklyPlan ?? {}) },
+            inventory: data.inventory ?? DEFAULT_INVENTORY,
+            preferences: data.preferences ?? DEFAULT_PREFERENCES,
+            nutritionalGoals: data.nutritionalGoals ?? DEFAULT_GOALS,
+          });
         }
       } catch {}
       setLoaded(true);
@@ -74,98 +96,96 @@ export function MealProvider({ children }: { children: React.ReactNode }) {
     load();
   }, []);
 
+  // Live sync with Firestore once signed in.
   useEffect(() => {
-    if (!userId) return;
-    syncFromSupabase(userId);
-  }, [userId]);
+    if (!uid || !loaded) return;
+    let migrated = false;
 
-  async function syncFromSupabase(uid: string) {
-    try {
-      const [{ data: mealData }, { data: inventoryData }] = await Promise.all([
-        supabase.from("meal_plans").select("*").eq("user_id", uid),
-        supabase.from("inventory_items").select("name").eq("user_id", uid),
-      ]);
-
-      if (mealData && mealData.length > 0) {
-        const plan: WeeklyPlan = { ...EMPTY_PLAN };
-        for (const row of mealData) {
-          const day = row.day_key as DayKey;
-          const slot = row.slot as MealSlot;
-          if (plan[day]) {
-            plan[day][slot] = {
-              id: row.id,
-              name: row.meal_name,
-              nameHindi: row.meal_name_hindi ?? undefined,
-              description: row.description,
-              ingredients: row.ingredients ?? [],
-              prepTime: row.prep_time,
-              nutritionHighlights: row.nutrition_highlights ?? undefined,
-            };
+    const unsubscribe = onSnapshot(
+      userDataDoc(uid, "meals"),
+      (snap) => {
+        if (!snap.exists()) {
+          // First server-confirmed look at an empty account: upload this
+          // device's data so existing meal plans and inventory are kept.
+          if (!snap.metadata.fromCache && !migrated) {
+            migrated = true;
+            setDoc(
+              userDataDoc(uid, "meals"),
+              stripUndefined({ ...stateRef.current, updatedAt: new Date().toISOString() }),
+            ).catch(() => {});
           }
+          return;
         }
-        setWeeklyPlan(plan);
-      }
 
-      if (inventoryData && inventoryData.length > 0) {
-        setInventory(inventoryData.map((i) => i.name));
-      } else if (inventoryData && inventoryData.length === 0 && uid) {
-        // Seed default inventory
-        await (supabase.from("inventory_items") as any).insert(
-          DEFAULT_INVENTORY.map((name) => ({ user_id: uid, name }))
-        );
-      }
-    } catch {}
-  }
+        const data = snap.data();
+        applyState({
+          weeklyPlan: { ...EMPTY_PLAN, ...(data.weeklyPlan ?? {}) },
+          inventory: Array.isArray(data.inventory) ? data.inventory : stateRef.current.inventory,
+          preferences: Array.isArray(data.preferences) ? data.preferences : stateRef.current.preferences,
+          nutritionalGoals: Array.isArray(data.nutritionalGoals)
+            ? data.nutritionalGoals
+            : stateRef.current.nutritionalGoals,
+        });
+      },
+      () => {
+        // Permission/network error — keep local data, stay usable offline.
+      },
+    );
+    return unsubscribe;
+  }, [uid, loaded]);
 
+  // Keep the local cache in sync with state.
   useEffect(() => {
     if (!loaded) return;
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ weeklyPlan, inventory, preferences, nutritionalGoals }));
-  }, [weeklyPlan, inventory, preferences, nutritionalGoals, loaded]);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(() => {});
+  }, [state, loaded]);
 
-  const setUserId = useCallback((id: string) => setUserIdState(id), []);
+  /** Apply locally and write through to Firestore (fire-and-forget). */
+  const persist = useCallback((next: MealsState) => {
+    applyState(next);
+    if (uid) {
+      setDoc(
+        userDataDoc(uid, "meals"),
+        stripUndefined({ ...next, updatedAt: new Date().toISOString() }),
+      ).catch(() => {});
+    }
+  }, [uid]);
 
   const setMeal = useCallback((day: DayKey, slot: MealSlot, meal: MealEntry | undefined) => {
-    setWeeklyPlan((prev) => ({
+    const prev = stateRef.current;
+    persist({
       ...prev,
-      [day]: { ...prev[day], [slot]: meal },
-    }));
-
-    if (userId) {
-      if (meal) {
-        (supabase.from("meal_plans") as any).upsert({
-          user_id: userId,
-          day_key: day,
-          slot,
-          meal_name: meal.name,
-          meal_name_hindi: meal.nameHindi ?? null,
-          description: meal.description,
-          ingredients: meal.ingredients,
-          prep_time: meal.prepTime,
-          nutrition_highlights: meal.nutritionHighlights ?? null,
-        }, { onConflict: "user_id,day_key,slot" }).then(() => {});
-      } else {
-        supabase.from("meal_plans").delete()
-          .eq("user_id", userId).eq("day_key", day).eq("slot", slot).then(() => {});
-      }
-    }
-  }, [userId]);
+      weeklyPlan: { ...prev.weeklyPlan, [day]: { ...prev.weeklyPlan[day], [slot]: meal } },
+    });
+  }, [persist]);
 
   const addInventoryItem = useCallback((item: string) => {
-    setInventory((prev) => (prev.includes(item) ? prev : [...prev, item]));
-    if (userId) {
-      supabase.from("inventory_items").insert({ user_id: userId, name: item }).then(() => {});
-    }
-  }, [userId]);
+    const prev = stateRef.current;
+    if (prev.inventory.includes(item)) return;
+    persist({ ...prev, inventory: [...prev.inventory, item] });
+  }, [persist]);
 
   const removeInventoryItem = useCallback((item: string) => {
-    setInventory((prev) => prev.filter((i) => i !== item));
-    if (userId) {
-      supabase.from("inventory_items").delete().eq("user_id", userId).eq("name", item).then(() => {});
-    }
-  }, [userId]);
+    const prev = stateRef.current;
+    persist({ ...prev, inventory: prev.inventory.filter((i) => i !== item) });
+  }, [persist]);
+
+  const setPreferences = useCallback((prefs: string[]) => {
+    persist({ ...stateRef.current, preferences: prefs });
+  }, [persist]);
+
+  const setNutritionalGoals = useCallback((goals: string[]) => {
+    persist({ ...stateRef.current, nutritionalGoals: goals });
+  }, [persist]);
 
   return (
-    <MealContext.Provider value={{ weeklyPlan, inventory, preferences, nutritionalGoals, userId, setUserId, setMeal, addInventoryItem, removeInventoryItem, setPreferences, setNutritionalGoals }}>
+    <MealContext.Provider value={{
+      weeklyPlan: state.weeklyPlan,
+      inventory: state.inventory,
+      preferences: state.preferences,
+      nutritionalGoals: state.nutritionalGoals,
+      setMeal, addInventoryItem, removeInventoryItem, setPreferences, setNutritionalGoals,
+    }}>
       {children}
     </MealContext.Provider>
   );

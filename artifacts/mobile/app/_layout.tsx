@@ -17,8 +17,8 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { UserProvider, useUser } from "@/context/UserContext";
-import { FamilyProvider, useFamily } from "@/context/FamilyContext";
-import { MealProvider, useMeals } from "@/context/MealContext";
+import { FamilyProvider } from "@/context/FamilyContext";
+import { MealProvider } from "@/context/MealContext";
 import { CommunityProvider } from "@/context/CommunityContext";
 
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -31,8 +31,6 @@ const queryClient = new QueryClient();
 
 function NavigationGuard({ children }: { children: React.ReactNode }) {
   const { session, profile, isLoaded } = useUser();
-  const { setUserId: setFamilyUserId } = useFamily();
-  const { setUserId: setMealUserId } = useMeals();
   // Track whether we've already navigated into the app this session.
   // This avoids depending on useSegments() timing (which can be stale when
   // the profile-change effect fires, causing the navigation to be silently skipped).
@@ -48,8 +46,6 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
       inAppRef.current = false;
       router.replace("/onboarding");
     } else {
-      setFamilyUserId(profile.id);
-      setMealUserId(profile.id);
       // Navigate to tabs the first time we have a valid session + profile.
       // Subsequent profile updates (e.g. name edits) skip this so we don't
       // reset the user's tab position.

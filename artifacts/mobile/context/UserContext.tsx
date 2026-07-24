@@ -1,7 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { type User, onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
+import { getDoc, setDoc } from "firebase/firestore";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { auth } from "@/lib/firebase";
+import { emailIndexDoc, userDoc } from "@/lib/firestore";
 
 export interface UserProfile {
   id: string;
@@ -26,6 +28,22 @@ function profileCacheKey(uid: string) {
   return `${PROFILE_CACHE_PREFIX}${uid}`;
 }
 
+/**
+ * Best-effort: write the profile to Firestore plus an emailIndex entry so
+ * other users' invite flow can detect this account. Fire-and-forget — the
+ * app stays local-first and never blocks on the network.
+ */
+function pushProfileToCloud(uid: string, name: string, familyName: string, email?: string | null) {
+  setDoc(
+    userDoc(uid),
+    { name, familyName, email: email ?? null, updatedAt: new Date().toISOString() },
+    { merge: true },
+  ).catch(() => {});
+  if (email) {
+    setDoc(emailIndexDoc(email), { uid }, { merge: true }).catch(() => {});
+  }
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -37,43 +55,42 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loadingRef.current = true;
 
     try {
-      // 1. Try the API server (Cloud SQL) — only works when Cloud Run is deployed
+      // 1. Firestore is the source of truth for the profile.
       try {
-        const domain = process.env.EXPO_PUBLIC_DOMAIN;
-        if (domain) {
-          const user = auth.currentUser;
-          const token = user ? await user.getIdToken() : null;
-          if (token) {
-            const res = await fetch(`https://${domain}/api/profile`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-              const data = await res.json();
-              const p: UserProfile = {
-                id:         data.id,
-                name:       data.name,
-                familyName: data.familyName,
-                email:      data.email ?? email,
-              };
-              setProfile(p);
-              await AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(p));
-              return;
-            }
-          }
+        const snap = await getDoc(userDoc(uid));
+        if (snap.exists()) {
+          const data = snap.data();
+          const p: UserProfile = {
+            id: uid,
+            name: data.name,
+            familyName: data.familyName,
+            email: data.email ?? email,
+          };
+          setProfile(p);
+          await AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(p));
+          // Keep the email lookup entry fresh (covers accounts created
+          // before the index existed).
+          if (email) setDoc(emailIndexDoc(email), { uid }, { merge: true }).catch(() => {});
+          return;
         }
+
+        // 2. No cloud profile yet — existing users have one cached locally
+        //    from before Firestore. Adopt it and migrate it up.
+        const cached = await AsyncStorage.getItem(profileCacheKey(uid));
+        if (cached) {
+          const p: UserProfile = { ...JSON.parse(cached), id: uid };
+          setProfile(p);
+          pushProfileToCloud(uid, p.name, p.familyName, email ?? p.email);
+          return;
+        }
+
+        // 3. Genuinely new user — needs onboarding.
+        setProfile(null);
       } catch {
-        // API unavailable — fall through to local cache
+        // Firestore unreachable (offline) — fall back to the local cache.
+        const cached = await AsyncStorage.getItem(profileCacheKey(uid));
+        setProfile(cached ? JSON.parse(cached) : null);
       }
-
-      // 2. Fall back to per-user AsyncStorage cache
-      const cached = await AsyncStorage.getItem(profileCacheKey(uid));
-      if (cached) {
-        setProfile(JSON.parse(cached));
-        return;
-      }
-
-      // 3. New user — needs onboarding
-      setProfile(null);
     } finally {
       setIsLoaded(true);
       loadingRef.current = false;
@@ -97,38 +114,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const saveProfile = useCallback(async (name: string, familyName: string) => {
     const user = auth.currentUser ?? session;
     const uid = user?.uid ?? `anon_${Date.now()}`;
-    const cacheKey = profileCacheKey(uid);
+    const p: UserProfile = { id: uid, name, familyName, email: user?.email ?? undefined };
 
-    // Best-effort: upsert to Cloud SQL via API
-    let dbId: string | null = null;
     if (user) {
-      try {
-        const domain = process.env.EXPO_PUBLIC_DOMAIN;
-        if (domain) {
-          const token = await user.getIdToken();
-          const res = await fetch(`https://${domain}/api/profile`, {
-            method:  "POST",
-            headers: {
-              Authorization:  `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name, familyName }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            dbId = data.id ?? null;
-          }
-        }
-      } catch {
-        // API save failed — local only
-      }
+      pushProfileToCloud(user.uid, name, familyName, user.email);
     }
 
-    const id = dbId ?? `auth_${uid}`;
-    const p: UserProfile = { id, name, familyName, email: user?.email ?? undefined };
-
     try {
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(p));
+      await AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(p));
     } catch {
       // AsyncStorage failure — profile still set in memory
     }
@@ -142,6 +135,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       "parivaar_members_v2",
       "parivaar_chores_v2",
       "parivaar_meals_v2",
+      "parivaar_community_v3",
+      "parivaar_community_me_v1",
     ]);
     setProfile(null);
     setSession(null);

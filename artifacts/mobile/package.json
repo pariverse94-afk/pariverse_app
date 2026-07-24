@@ -56,7 +56,6 @@
   },
   "dependencies": {
     "@firebase/auth": "^1.13.3",
-    "@supabase/supabase-js": "^2.105.1",
     "firebase": "^12.16.0"
   }
 }

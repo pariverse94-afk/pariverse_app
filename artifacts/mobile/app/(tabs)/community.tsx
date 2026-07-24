@@ -2,6 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -38,7 +39,7 @@ const POST_CATEGORIES: { key: PostCategory; label: string; color: string }[] = [
 export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { posts, addPost, likePost, savePost, deletePost } = useCommunity();
+  const { posts, addPost, likePost, savePost, deletePost, reportPost } = useCommunity();
   const [filter, setFilter] = useState<PostCategory | "all">("all");
   const [postModalVisible, setPostModalVisible] = useState(false);
   const [newContent, setNewContent] = useState("");
@@ -55,6 +56,20 @@ export default function CommunityScreen() {
     setNewContent("");
     setNewCategory("general");
     setPostModalVisible(false);
+  };
+
+  const confirmReport = (id: string) => {
+    const message =
+      "Report this post as inappropriate? It will be hidden from your feed and sent for review.";
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (window.confirm(message)) reportPost(id);
+    } else {
+      Alert.alert("Report post", message, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Report", style: "destructive", onPress: () => reportPost(id) },
+      ]);
+    }
   };
 
   return (
@@ -113,6 +128,7 @@ export default function CommunityScreen() {
               onLike={() => likePost(item.id)}
               onSave={() => savePost(item.id)}
               onDelete={item.isOwn ? () => deletePost(item.id) : undefined}
+              onReport={!item.isOwn ? () => confirmReport(item.id) : undefined}
             />
           )}
           contentContainerStyle={[styles.listContent, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 90 }]}

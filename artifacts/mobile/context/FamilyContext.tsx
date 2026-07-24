@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { emailIndexDoc, stripUndefined, userDataDoc } from "@/lib/firestore";
+import { useUser } from "@/context/UserContext";
 
 export interface FamilyMember {
   id: string;
@@ -24,8 +26,6 @@ export interface Chore {
 interface FamilyContextValue {
   members: FamilyMember[];
   chores: Chore[];
-  userId: string | null;
-  setUserId: (id: string) => void;
   addMember: (name: string, role: FamilyMember["role"], invitedEmail?: string) => Promise<void>;
   deleteMember: (id: string) => Promise<void>;
   updateMemberEmail: (memberId: string, email: string) => Promise<void>;
@@ -65,11 +65,25 @@ function generateId() {
 const FamilyContext = createContext<FamilyContextValue | null>(null);
 
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
+  const { session } = useUser();
+  const uid = session?.uid ?? null;
+
   const [members, setMembers] = useState<FamilyMember[]>(DEFAULT_MEMBERS);
   const [chores, setChores] = useState<Chore[]>(DEFAULT_CHORES);
-  const [userId, setUserIdState] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  // Latest values for use inside async callbacks and the snapshot listener.
+  const membersRef = useRef<FamilyMember[]>(DEFAULT_MEMBERS);
+  const choresRef = useRef<Chore[]>(DEFAULT_CHORES);
+
+  function applyState(nextMembers: FamilyMember[], nextChores: Chore[]) {
+    membersRef.current = nextMembers;
+    choresRef.current = nextChores;
+    setMembers(nextMembers);
+    setChores(nextChores);
+  }
+
+  // Load the local cache first — the app must work offline.
   useEffect(() => {
     async function load() {
       try {
@@ -77,227 +91,178 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(STORAGE_KEYS.members),
           AsyncStorage.getItem(STORAGE_KEYS.chores),
         ]);
-        if (storedMembers) setMembers(JSON.parse(storedMembers));
-        if (storedChores) setChores(JSON.parse(storedChores));
+        const m = storedMembers ? JSON.parse(storedMembers) : membersRef.current;
+        const c = storedChores ? JSON.parse(storedChores) : choresRef.current;
+        applyState(m, c);
       } catch {}
       setLoaded(true);
     }
     load();
   }, []);
 
+  // Live sync with Firestore once signed in.
   useEffect(() => {
-    if (!userId) return;
-    syncFromSupabase(userId);
-  }, [userId]);
+    if (!uid || !loaded) return;
+    let migrated = false;
 
-  async function syncFromSupabase(uid: string) {
-    try {
-      const [{ data: membersData }, { data: choresData }] = await Promise.all([
-        supabase.from("family_members").select("*").eq("user_id", uid).order("created_at"),
-        supabase.from("chores").select("*").eq("user_id", uid).order("created_at"),
-      ]);
-
-      if (membersData && membersData.length > 0) {
-        // Batch-check which invited emails are registered on the app
-        const invitedEmails = (membersData as any[])
-          .map((m) => m.invited_email)
-          .filter(Boolean) as string[];
-
-        const onAppEmails = new Set<string>();
-        if (invitedEmails.length > 0) {
-          const { data: users } = await (supabase.from("parivaar_users") as any)
-            .select("email")
-            .in("email", invitedEmails);
-          if (users) {
-            (users as any[]).forEach((u) => { if (u.email) onAppEmails.add(u.email); });
+    const unsubscribe = onSnapshot(
+      userDataDoc(uid, "family"),
+      (snap) => {
+        if (!snap.exists()) {
+          // No cloud data for this account yet. Once the *server* (not the
+          // local cache) confirms that, upload this device's data so
+          // existing users keep their families and chores.
+          if (!snap.metadata.fromCache && !migrated) {
+            migrated = true;
+            setDoc(
+              userDataDoc(uid, "family"),
+              stripUndefined({
+                members: membersRef.current,
+                chores: choresRef.current,
+                updatedAt: new Date().toISOString(),
+              }),
+            ).catch(() => {});
           }
+          return;
         }
 
-        const mapped: FamilyMember[] = (membersData as any[]).map((m) => ({
-          id: m.id,
-          name: m.name,
-          role: m.role as FamilyMember["role"],
-          color: m.color,
-          invitedEmail: m.invited_email ?? undefined,
-          isOnApp: m.invited_email ? onAppEmails.has(m.invited_email) : undefined,
-        }));
-        setMembers(mapped);
-        AsyncStorage.setItem(STORAGE_KEYS.members, JSON.stringify(mapped));
-      } else if (membersData && membersData.length === 0) {
-        await pushDefaultsToSupabase(uid);
-      }
+        const data = snap.data();
+        const nextMembers: FamilyMember[] = Array.isArray(data.members) ? data.members : [];
+        const nextChores: Chore[] = Array.isArray(data.chores) ? data.chores : [];
+        applyState(nextMembers, nextChores);
+        void refreshIsOnApp(nextMembers);
+      },
+      () => {
+        // Permission/network error — keep local data, stay usable offline.
+      },
+    );
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, loaded]);
 
-      if (choresData && choresData.length > 0) {
-        const mapped: Chore[] = (choresData as any[]).map((c) => ({
-          id: c.id,
-          title: c.title,
-          assignedTo: c.assigned_to,
-          completed: c.completed,
-          category: c.category as Chore["category"],
-          recurring: c.recurring as Chore["recurring"],
-          createdAt: c.created_at,
-        }));
-        setChores(mapped);
-        AsyncStorage.setItem(STORAGE_KEYS.chores, JSON.stringify(mapped));
-      }
-    } catch {}
-  }
-
-  async function pushDefaultsToSupabase(uid: string) {
-    try {
-      const memberInserts = DEFAULT_MEMBERS.map((m) => ({
-        user_id: uid,
-        name: m.name,
-        role: m.role,
-        color: m.color,
-      }));
-      const { data: inserted } = await supabase
-        .from("family_members")
-        .insert(memberInserts)
-        .select("id,name");
-
-      const idMap: Record<string, string> = {};
-      if (inserted) {
-        DEFAULT_MEMBERS.forEach((dm, i) => {
-          if ((inserted as any[])[i]) idMap[dm.id] = (inserted as any[])[i].id;
-        });
-      }
-
-      const choreInserts = DEFAULT_CHORES.map((c) => ({
-        user_id: uid,
-        title: c.title,
-        assigned_to: idMap[c.assignedTo] ?? c.assignedTo,
-        completed: c.completed,
-        category: c.category,
-        recurring: c.recurring,
-      }));
-      await supabase.from("chores").insert(choreInserts);
-      await syncFromSupabase(uid);
-    } catch {}
-  }
-
+  // Keep the local cache in sync with state.
   useEffect(() => {
     if (!loaded) return;
-    AsyncStorage.setItem(STORAGE_KEYS.members, JSON.stringify(members));
+    AsyncStorage.setItem(STORAGE_KEYS.members, JSON.stringify(members)).catch(() => {});
   }, [members, loaded]);
 
   useEffect(() => {
     if (!loaded) return;
-    AsyncStorage.setItem(STORAGE_KEYS.chores, JSON.stringify(chores));
+    AsyncStorage.setItem(STORAGE_KEYS.chores, JSON.stringify(chores)).catch(() => {});
   }, [chores, loaded]);
 
-  const setUserId = useCallback((id: string) => {
-    setUserIdState(id);
-  }, []);
+  /** Apply locally and write through to Firestore (fire-and-forget). */
+  const persist = useCallback((nextMembers: FamilyMember[], nextChores: Chore[]) => {
+    applyState(nextMembers, nextChores);
+    if (uid) {
+      setDoc(
+        userDataDoc(uid, "family"),
+        stripUndefined({
+          members: nextMembers,
+          chores: nextChores,
+          updatedAt: new Date().toISOString(),
+        }),
+      ).catch(() => {});
+    }
+  }, [uid]);
+
+  /** Re-check which invited emails belong to registered accounts. */
+  async function refreshIsOnApp(current: FamilyMember[]) {
+    const emails = Array.from(
+      new Set(current.map((m) => m.invitedEmail).filter(Boolean) as string[]),
+    );
+    if (emails.length === 0) return;
+
+    const results = await Promise.all(
+      emails.map(async (email) => {
+        try {
+          const snap = await getDoc(emailIndexDoc(email));
+          return [email, snap.exists()] as const;
+        } catch {
+          return [email, undefined] as const;
+        }
+      }),
+    );
+    const lookup = new Map<string, boolean | undefined>(results);
+
+    const prev = membersRef.current;
+    const next = prev.map((m) => {
+      if (!m.invitedEmail) return m;
+      const isOnApp = lookup.get(m.invitedEmail);
+      return isOnApp === undefined || isOnApp === m.isOnApp ? m : { ...m, isOnApp };
+    });
+    if (next.some((m, i) => m !== prev[i])) {
+      membersRef.current = next;
+      setMembers(next);
+    }
+  }
 
   const addMember = useCallback(async (name: string, role: FamilyMember["role"], invitedEmail?: string) => {
     const color = MEMBER_COLORS[Math.floor(Math.random() * MEMBER_COLORS.length)];
-    const localId = generateId();
-
-    setMembers((prev) => [
-      ...prev,
-      { id: localId, name, role, color, invitedEmail, isOnApp: undefined },
-    ]);
-
-    if (userId) {
-      const { data } = await supabase
-        .from("family_members")
-        .insert({ user_id: userId, name, role, color, invited_email: invitedEmail ?? null })
-        .select("id")
-        .single();
-      if (data) {
-        setMembers((prev) =>
-          prev.map((m) => (m.id === localId ? { ...m, id: (data as any).id } : m))
-        );
-      }
-    }
-  }, [userId]);
+    const member: FamilyMember = {
+      id: generateId(),
+      name,
+      role,
+      color,
+      invitedEmail: invitedEmail?.trim().toLowerCase() || undefined,
+      isOnApp: undefined,
+    };
+    const nextMembers = [...membersRef.current, member];
+    persist(nextMembers, choresRef.current);
+    if (member.invitedEmail) void refreshIsOnApp(nextMembers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persist]);
 
   const deleteMember = useCallback(async (id: string) => {
-    setMembers((prev) => prev.filter((m) => m.id !== id));
-    setChores((prev) => prev.filter((c) => c.assignedTo !== id));
-    if (userId) {
-      await supabase.from("family_members").delete().eq("id", id).eq("user_id", userId);
-    }
-  }, [userId]);
+    persist(
+      membersRef.current.filter((m) => m.id !== id),
+      choresRef.current.filter((c) => c.assignedTo !== id),
+    );
+  }, [persist]);
 
   const updateMemberEmail = useCallback(async (memberId: string, email: string) => {
     const trimmed = email.trim().toLowerCase();
 
-    // Check if this email is registered on the app
+    // Check whether this email belongs to a registered Pariverse account.
     let isOnApp = false;
     try {
-      const { data } = await (supabase.from("parivaar_users") as any)
-        .select("id")
-        .eq("email", trimmed)
-        .maybeSingle();
-      isOnApp = data !== null;
+      const snap = await getDoc(emailIndexDoc(trimmed));
+      isOnApp = snap.exists();
     } catch {}
 
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === memberId ? { ...m, invitedEmail: trimmed, isOnApp } : m
-      )
+    const nextMembers = membersRef.current.map((m) =>
+      m.id === memberId ? { ...m, invitedEmail: trimmed, isOnApp } : m,
     );
-
-    if (userId) {
-      await supabase
-        .from("family_members")
-        .update({ invited_email: trimmed })
-        .eq("id", memberId)
-        .eq("user_id", userId);
-    }
-  }, [userId]);
+    persist(nextMembers, choresRef.current);
+  }, [persist]);
 
   const addChore = useCallback(async (chore: Omit<Chore, "id" | "createdAt" | "completed">) => {
-    const localId = generateId();
-    const now = new Date().toISOString();
-    setChores((prev) => [...prev, { ...chore, id: localId, completed: false, createdAt: now }]);
-
-    if (userId) {
-      const { data } = await supabase
-        .from("chores")
-        .insert({
-          user_id: userId,
-          title: chore.title,
-          assigned_to: chore.assignedTo,
-          completed: false,
-          category: chore.category,
-          recurring: chore.recurring,
-        })
-        .select("id")
-        .single();
-      if (data) {
-        setChores((prev) =>
-          prev.map((c) => (c.id === localId ? { ...c, id: (data as any).id } : c))
-        );
-      }
-    }
-  }, [userId]);
+    const next: Chore = {
+      ...chore,
+      id: generateId(),
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+    persist(membersRef.current, [...choresRef.current, next]);
+  }, [persist]);
 
   const toggleChore = useCallback(async (id: string) => {
-    let newCompleted = false;
-    setChores((prev) =>
-      prev.map((c) => {
-        if (c.id === id) { newCompleted = !c.completed; return { ...c, completed: newCompleted }; }
-        return c;
-      })
+    persist(
+      membersRef.current,
+      choresRef.current.map((c) => (c.id === id ? { ...c, completed: !c.completed } : c)),
     );
-    if (userId) {
-      await supabase.from("chores").update({ completed: newCompleted }).eq("id", id).eq("user_id", userId);
-    }
-  }, [userId]);
+  }, [persist]);
 
   const deleteChore = useCallback(async (id: string) => {
-    setChores((prev) => prev.filter((c) => c.id !== id));
-    if (userId) {
-      await supabase.from("chores").delete().eq("id", id).eq("user_id", userId);
-    }
-  }, [userId]);
+    persist(
+      membersRef.current,
+      choresRef.current.filter((c) => c.id !== id),
+    );
+  }, [persist]);
 
   return (
     <FamilyContext.Provider value={{
-      members, chores, userId, setUserId,
+      members, chores,
       addMember, deleteMember, updateMemberEmail,
       addChore, toggleChore, deleteChore,
     }}>

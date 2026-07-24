@@ -22,18 +22,18 @@ Pariverse ("we", "our", or "us") is committed to protecting your privacy. This P
 
 ## Data Storage
 
-Your account is managed securely by Google Firebase. Community posts are stored in our database. Local app data (family members, chores, and meals) is stored on your device.
+Your account is managed securely by Google Firebase. Your app data (family members, chores, and meal plans) and community posts are stored in Google Cloud Firestore, linked to your account, so your data syncs across your devices. A copy is also kept on your device so the app works offline.
 
 ## Data Sharing
 
 We do not sell, trade, or rent your personal information to third parties. We share data only with the following service providers, solely to operate the app:
 
-- **Google Firebase** — authentication and account management.
+- **Google Firebase** — authentication, account management, and data storage (Cloud Firestore).
 - **Groq** — AI inference; request data only, not stored.
 
 ## Children's Privacy
 
-Pariverse is designed for family use. We do not knowingly collect personal information from children under 13. Child names entered for chore or meal tracking are stored locally on your device only.
+Pariverse is designed for family use. We do not knowingly collect personal information from children under 13. Child names entered for chore or meal tracking are stored within the parent's account data and are visible only to that account.
 
 ## Data Deletion
 

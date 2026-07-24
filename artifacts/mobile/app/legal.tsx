@@ -34,15 +34,15 @@ function PrivacyPolicy() {
       </Section>
 
       <Section title="Data Storage">
-        {`Your account is managed securely by Google Firebase. Community posts are stored in our database. Local app data (family members, chores, meals) is stored on your device.`}
+        {`Your account is managed securely by Google Firebase. Your app data (family members, chores, meal plans) and community posts are stored in Google Cloud Firestore, linked to your account, so your data syncs across your devices. A copy is also kept on your device so the app works offline.`}
       </Section>
 
       <Section title="Data Sharing">
-        {`We do not sell, trade, or rent your personal information to third parties. We share data only with:\n• Google Firebase (authentication and account management)\n• Groq (AI inference — request data only, not stored)`}
+        {`We do not sell, trade, or rent your personal information to third parties. We share data only with:\n• Google Firebase (authentication, account management, and data storage via Cloud Firestore)\n• Groq (AI inference — request data only, not stored)`}
       </Section>
 
       <Section title="Children's Privacy">
-        {`${APP_NAME} is designed for family use. We do not knowingly collect personal information from children under 13. Child names entered for chore/meal tracking are stored locally on your device only.`}
+        {`${APP_NAME} is designed for family use. We do not knowingly collect personal information from children under 13. Child names entered for chore/meal tracking are stored within the parent's account data and are visible only to that account.`}
       </Section>
 
       <Section title="Data Deletion">

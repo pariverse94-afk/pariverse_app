@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // ── Private per-user data ────────────────────────────────────────────
+    // users/{uid}            → profile (name, familyName, email)
+    // users/{uid}/data/*     → family, meals, community (liked/saved/hidden)
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+
+      match /data/{docId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // ── Email lookup ("is this person on Pariverse?") ────────────────────
+    // Exact-match `get` only — listing is blocked, so registered emails
+    // cannot be enumerated. Each user may only write the entry for the
+    // email address on their own account.
+    match /emailIndex/{email} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn()
+        && request.auth.token.email != null
+        && email == request.auth.token.email.lower()
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── Shared Mom's Corner posts ────────────────────────────────────────
+    match /communityPosts/{postId} {
+      allow read: if signedIn();
+
+      // Anyone signed in can post as themselves; posts start with 0 likes
+      // and are capped at 2000 characters.
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.content is string
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000
+        && request.resource.data.likeCount == 0;
+
+      // Only the author can delete their post.
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+
+      // The author can edit their own post. Everyone else may only change
+      // likeCount, and only by exactly +1 or -1 (the like button).
+      allow update: if signedIn() && (
+        resource.data.authorId == request.auth.uid
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+          && (request.resource.data.likeCount == resource.data.likeCount + 1
+              || request.resource.data.likeCount == resource.data.likeCount - 1)
+        )
+      );
+    }
+
+    // ── UGC reports ──────────────────────────────────────────────────────
+    // Clients can only file reports as themselves; reading/handling them
+    // happens in the Firebase console.
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.reportedBy == request.auth.uid;
+      allow read, update, delete: if false;
+    }
+  }
+}

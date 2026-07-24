@@ -10,6 +10,7 @@ interface Props {
   onLike: () => void;
   onSave: () => void;
   onDelete?: () => void;
+  onReport?: () => void;
 }
 
 const CATEGORY_COLORS: Record<PostCategory, string> = {
@@ -38,7 +39,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-export function PostCard({ post, onLike, onSave, onDelete }: Props) {
+export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
   const colors = useColors();
   const catColor = CATEGORY_COLORS[post.category];
 
@@ -92,8 +93,16 @@ export function PostCard({ post, onLike, onSave, onDelete }: Props) {
           />
         </TouchableOpacity>
 
+        <View style={styles.actionSpacer} />
+
+        {onReport && (
+          <TouchableOpacity style={styles.actionBtn} onPress={onReport} testID={`report-${post.id}`}>
+            <Feather name="flag" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
+
         {onDelete && (
-          <TouchableOpacity style={styles.actionBtn} onPress={onDelete}>
+          <TouchableOpacity style={styles.actionBtn} onPress={onDelete} testID={`delete-${post.id}`}>
             <Feather name="trash-2" size={16} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
@@ -165,6 +174,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+  },
+  actionSpacer: {
+    flex: 1,
   },
   actionCount: {
     fontSize: 13,
