@@ -53,3 +53,9 @@ id = "MjXd_Rm9KoGmKiJpJBEZ2"
 uri = "file://docs/pariverse-privacy-policy.md"
 type = "text"
 title = "Pariverse Privacy Policy (ready to paste)"
+
+[[outputs]]
+id = "SdmAD1piaSIhpn84VbzqN"
+uri = "file://docs/pariverse-architecture.png"
+type = "image"
+title = "Pariverse — components & backend architecture"
