@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "51629814454-monqt00gbvefr64a5ks6nhhk9jhlks3b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pariverse.app",
+            "certificate_hash": "111b2ae4a7e408fe53831c041b28119e39c4e82c"
+          }
+        },
+        {
           "client_id": "51629814454-2mu91mq66nrk31lfn4434ll6p4r8clo4.apps.googleusercontent.com",
           "client_type": 3
         }
