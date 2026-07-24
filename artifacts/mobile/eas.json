@@ -39,7 +39,6 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_DOMAIN": "",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "pariverse-prod",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDds5PrM5mEbo5Z1OhLuKuGeLtTF2EmAuk",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "pariverse-prod.firebaseapp.com",
