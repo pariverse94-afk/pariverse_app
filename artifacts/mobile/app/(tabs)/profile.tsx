@@ -1,5 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -119,8 +120,6 @@ export default function ProfileScreen() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteChecking, setInviteChecking] = useState(false);
   const [inviteSaved, setInviteSaved] = useState(false);
-  const [inviteSending, setInviteSending] = useState(false);
-  const [inviteEmailSent, setInviteEmailSent] = useState(false);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -158,8 +157,6 @@ export default function ProfileScreen() {
     setInviteMember(member);
     setInviteEmail(member.invitedEmail ?? "");
     setInviteSaved(false);
-    setInviteSending(false);
-    setInviteEmailSent(false);
     setInviteVisible(true);
   };
 
@@ -170,41 +167,7 @@ export default function ProfileScreen() {
     setInviteChecking(false);
     setInviteSaved(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // If already on app, close after a moment — otherwise stay open to send invite email
-  };
-
-  const handleSendInviteEmail = async () => {
-    if (!inviteMember || !inviteEmail.trim()) return;
-    setInviteSending(true);
-    try {
-      const domain = process.env.EXPO_PUBLIC_DOMAIN;
-      const url = domain ? `https://${domain}/api/invite` : "/api/invite";
-      const redirectTo = domain ? `https://${domain}/` : undefined;
-
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: inviteEmail.trim(),
-          memberName: inviteMember.name,
-          inviterName: profile?.name ?? "Your family",
-          redirectTo,
-        }),
-      });
-      const json = await res.json() as { success?: boolean; alreadyOnApp?: boolean; error?: string };
-
-      if (json.success) {
-        setInviteEmailSent(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setTimeout(() => setInviteVisible(false), 2000);
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } catch {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
-      setInviteSending(false);
-    }
+    // Stays open so the app link can be shared if the member isn't on Pariverse yet.
   };
 
   const handleShareApp = async () => {
@@ -349,6 +312,27 @@ export default function ProfileScreen() {
           <Feather name="log-out" size={16} color={colors.destructive} />
           <Text style={[styles.signOutText, { color: colors.destructive }]}>Sign Out</Text>
         </TouchableOpacity>
+
+        {/* Legal & Support */}
+        <View style={styles.legalRow}>
+          <TouchableOpacity
+            onPress={() => router.push("/legal")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={[styles.legalLink, { color: colors.mutedForeground }]}>
+              Privacy & Terms
+            </Text>
+          </TouchableOpacity>
+          <Text style={[styles.legalDot, { color: colors.mutedForeground }]}>·</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/delete-account")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={[styles.legalLink, { color: colors.mutedForeground }]}>
+              Delete Account
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* ── Edit Profile Modal ── */}
@@ -530,22 +514,12 @@ export default function ProfileScreen() {
                 >
                   {updatedInviteMember.isOnApp
                     ? `${inviteMember?.name} is already on Pariverse!`
-                    : `${inviteMember?.name} isn't on Pariverse yet — send them an invite!`}
+                    : `${inviteMember?.name} isn't on Pariverse yet — share the app with them!`}
                 </Text>
               </View>
             )}
 
-            {/* Email sent confirmation */}
-            {inviteEmailSent && (
-              <View style={[styles.inviteResult, { backgroundColor: "#D1FAE5" }]}>
-                <Feather name="send" size={16} color="#059669" />
-                <Text style={[styles.inviteResultText, { color: "#059669" }]}>
-                  Invite sent to {inviteEmail}!
-                </Text>
-              </View>
-            )}
-
-            {/* Primary action: Check & Save → then Send Invite Email */}
+            {/* Primary action: Check & Save */}
             {!inviteSaved ? (
               <TouchableOpacity
                 style={[styles.sheetBtn, { backgroundColor: colors.primary, opacity: inviteEmail.trim() ? 1 : 0.5 }]}
@@ -558,25 +532,10 @@ export default function ProfileScreen() {
                   <Text style={styles.sheetBtnText}>Check & Save</Text>
                 )}
               </TouchableOpacity>
-            ) : updatedInviteMember && !updatedInviteMember.isOnApp && !inviteEmailSent ? (
-              <TouchableOpacity
-                style={[styles.sheetBtn, { backgroundColor: colors.primary, opacity: inviteSending ? 0.6 : 1 }]}
-                onPress={handleSendInviteEmail}
-                disabled={inviteSending}
-              >
-                {inviteSending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Feather name="send" size={16} color="#fff" />
-                    <Text style={styles.sheetBtnText}>Send Invite Email</Text>
-                  </>
-                )}
-              </TouchableOpacity>
             ) : null}
 
-            {/* Share link as secondary action when not yet sent */}
-            {inviteSaved && updatedInviteMember && !updatedInviteMember.isOnApp && !inviteEmailSent && (
+            {/* Share the app link when the member isn't on Pariverse yet */}
+            {inviteSaved && updatedInviteMember && !updatedInviteMember.isOnApp && (
               <TouchableOpacity
                 style={[styles.shareBtn, { borderColor: colors.border }]}
                 onPress={handleShareApp}
@@ -704,6 +663,15 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   signOutText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  legalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 16,
+  },
+  legalLink: { fontSize: 13, fontFamily: "Inter_500Medium", textDecorationLine: "underline" },
+  legalDot: { fontSize: 13 },
 
   // Modals
   modalOverlay: { flex: 1, justifyContent: "flex-end" },

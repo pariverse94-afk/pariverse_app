@@ -16,7 +16,7 @@ type Tab = typeof TABS[number];
 
 const CONTACT_EMAIL = "pariverse94@gmail.com";
 const APP_NAME = "Pariverse";
-const LAST_UPDATED = "May 2025";
+const LAST_UPDATED = "July 2026";
 
 function PrivacyPolicy() {
   return (
@@ -26,7 +26,7 @@ function PrivacyPolicy() {
       </Section>
 
       <Section title="Information We Collect">
-        {`• Account information: name, family name, and email address provided during sign-up via Google OAuth\n• Family data: family member names and roles you add within the app\n• Chore and meal plan data: content you create and save in the app\n• Community posts: content you voluntarily share in Mom's Corner\n• Device information: device type and operating system (for crash reporting only)`}
+        {`• Account information: name, family name, and email address provided during sign-up (email/password or Google Sign-In)\n• Family data: family member names and roles you add within the app\n• Chore and meal plan data: content you create and save in the app\n• Community posts: content you voluntarily share in Mom's Corner\n• Device information: device type and operating system (for crash reporting only)`}
       </Section>
 
       <Section title="How We Use Your Information">
@@ -34,11 +34,11 @@ function PrivacyPolicy() {
       </Section>
 
       <Section title="Data Storage">
-        {`Your profile and family data are stored securely in Supabase (hosted on AWS infrastructure). Community posts are stored in our database. Local app data (chores, meals) is stored on your device using AsyncStorage.`}
+        {`Your account is managed securely by Google Firebase. Community posts are stored in our database. Local app data (family members, chores, meals) is stored on your device.`}
       </Section>
 
       <Section title="Data Sharing">
-        {`We do not sell, trade, or rent your personal information to third parties. We share data only with:\n• Supabase (database provider)\n• Groq (AI inference — request data only, not stored)\n• Google (authentication only)`}
+        {`We do not sell, trade, or rent your personal information to third parties. We share data only with:\n• Google Firebase (authentication and account management)\n• Groq (AI inference — request data only, not stored)`}
       </Section>
 
       <Section title="Children's Privacy">
@@ -50,7 +50,7 @@ function PrivacyPolicy() {
       </Section>
 
       <Section title="Security">
-        {`We use industry-standard security measures including HTTPS encryption and secure authentication via Supabase Auth. However, no method of transmission over the internet is 100% secure.`}
+        {`We use industry-standard security measures including HTTPS encryption and secure authentication via Firebase Authentication. However, no method of transmission over the internet is 100% secure.`}
       </Section>
 
       <Section title="Contact Us">
