@@ -85,6 +85,9 @@ export function MealProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (prevUidRef.current !== null && uid !== prevUidRef.current) {
       applyState(DEFAULT_STATE);
+      // Defense-in-depth: also drop the on-disk cache in case sign-out's
+      // cleanup didn't run (e.g. auth token revoked mid-session).
+      AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
     }
     prevUidRef.current = uid;
   }, [uid]);

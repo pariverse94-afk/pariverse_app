@@ -133,6 +133,9 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     if (prevUidRef.current !== null && uid !== prevUidRef.current) {
       setRawPosts([]);
       applyMe(EMPTY_ME);
+      // Defense-in-depth: also drop the on-disk caches in case sign-out's
+      // cleanup didn't run (e.g. auth token revoked mid-session).
+      AsyncStorage.multiRemove([POSTS_CACHE_KEY, ME_CACHE_KEY]).catch(() => {});
     }
     prevUidRef.current = uid;
   }, [uid, applyMe]);

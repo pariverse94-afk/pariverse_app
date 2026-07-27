@@ -92,6 +92,9 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (prevUidRef.current !== null && uid !== prevUidRef.current) {
       applyState(DEFAULT_MEMBERS, DEFAULT_CHORES);
+      // Defense-in-depth: also drop the on-disk cache in case sign-out's
+      // cleanup didn't run (e.g. auth token revoked mid-session).
+      AsyncStorage.multiRemove([STORAGE_KEYS.members, STORAGE_KEYS.chores]).catch(() => {});
     }
     prevUidRef.current = uid;
   }, [uid]);
