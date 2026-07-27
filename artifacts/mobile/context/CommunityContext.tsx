@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   addDoc,
   deleteDoc,
-  getDoc,
   increment,
   limit,
   onSnapshot,
@@ -45,6 +44,13 @@ interface StoredPost {
   isSeed?: boolean;
 }
 
+/** This user's private flags (liked/saved/hidden post ids). */
+interface MeState {
+  liked: Set<string>;
+  saved: Set<string>;
+  hidden: Set<string>;
+}
+
 interface CommunityContextValue {
   posts: Post[];
   loading: boolean;
@@ -68,6 +74,23 @@ const SEEDS: Array<Omit<StoredPost, "authorId" | "createdAt" | "likeCount"> & { 
 const POSTS_CACHE_KEY = "parivaar_community_v3";
 const ME_CACHE_KEY = "parivaar_community_me_v1";
 const OWN_COLORS = ["#C44B2B", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"];
+const EMPTY_ME: MeState = { liked: new Set(), saved: new Set(), hidden: new Set() };
+
+function meFromArrays(d: { likedPostIds?: string[]; savedPostIds?: string[]; hiddenPostIds?: string[] }): MeState {
+  return {
+    liked: new Set(d.likedPostIds ?? []),
+    saved: new Set(d.savedPostIds ?? []),
+    hidden: new Set(d.hiddenPostIds ?? []),
+  };
+}
+
+function meToArrays(me: MeState) {
+  return {
+    likedPostIds: [...me.liked],
+    savedPostIds: [...me.saved],
+    hiddenPostIds: [...me.hidden],
+  };
+}
 
 /** One-time: fill an empty community with friendly starter posts. */
 async function seedCommunity(uid: string) {
@@ -90,11 +113,29 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const uid = session?.uid ?? null;
 
   const [rawPosts, setRawPosts] = useState<StoredPost[]>([]);
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [me, setMe] = useState<MeState>(EMPTY_ME);
   const [loading, setLoading] = useState(true);
+  // Ref mirrors `me` so rapid taps (like/save) never read stale state and
+  // can't double-fire likeCount increments.
+  const meRef = useRef<MeState>(EMPTY_ME);
   const seededRef = useRef(false);
+
+  const applyMe = useCallback((next: MeState) => {
+    meRef.current = next;
+    setMe(next);
+  }, []);
+
+  // If the signed-in account changes (sign-out, or a different user signing
+  // in on this device), drop all in-memory community state so one account's
+  // likes/saves/hidden posts never bleed into another.
+  const prevUidRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevUidRef.current !== null && uid !== prevUidRef.current) {
+      setRawPosts([]);
+      applyMe(EMPTY_ME);
+    }
+    prevUidRef.current = uid;
+  }, [uid, applyMe]);
 
   // Cold-start: show cached feed and personal flags immediately.
   useEffect(() => {
@@ -105,15 +146,10 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(ME_CACHE_KEY),
         ]);
         if (cachedPosts) setRawPosts(JSON.parse(cachedPosts));
-        if (cachedMe) {
-          const me = JSON.parse(cachedMe);
-          setLikedIds(new Set(me.likedPostIds ?? []));
-          setSavedIds(new Set(me.savedPostIds ?? []));
-          setHiddenIds(new Set(me.hiddenPostIds ?? []));
-        }
+        if (cachedMe) applyMe(meFromArrays(JSON.parse(cachedMe)));
       } catch {}
     })();
-  }, []);
+  }, [applyMe]);
 
   // Live shared feed (rules require a signed-in user).
   useEffect(() => {
@@ -145,44 +181,36 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [uid]);
 
-  // Personal liked/saved/hidden sets from Firestore (cross-device).
+  // Live personal liked/saved/hidden sets (cross-device sync).
   useEffect(() => {
     if (!uid) return;
-    (async () => {
-      try {
-        const snap = await getDoc(userDataDoc(uid, "community"));
-        if (snap.exists()) {
-          const d = snap.data();
-          setLikedIds(new Set(d.likedPostIds ?? []));
-          setSavedIds(new Set(d.savedPostIds ?? []));
-          setHiddenIds(new Set(d.hiddenPostIds ?? []));
-          AsyncStorage.setItem(ME_CACHE_KEY, JSON.stringify({
-            likedPostIds: d.likedPostIds ?? [],
-            savedPostIds: d.savedPostIds ?? [],
-            hiddenPostIds: d.hiddenPostIds ?? [],
-          })).catch(() => {});
-        }
-      } catch {}
-    })();
-  }, [uid]);
+    const unsubscribe = onSnapshot(
+      userDataDoc(uid, "community"),
+      (snap) => {
+        if (!snap.exists()) return; // created lazily on first like/save/report
+        const next = meFromArrays(snap.data());
+        applyMe(next);
+        AsyncStorage.setItem(ME_CACHE_KEY, JSON.stringify(meToArrays(next))).catch(() => {});
+      },
+      () => {},
+    );
+    return unsubscribe;
+  }, [uid, applyMe]);
 
-  const persistMe = useCallback((liked: Set<string>, saved: Set<string>, hidden: Set<string>) => {
-    const payload = {
-      likedPostIds: [...liked],
-      savedPostIds: [...saved],
-      hiddenPostIds: [...hidden],
-      updatedAt: new Date().toISOString(),
-    };
+  /** Apply locally, cache locally, and push to Firestore (fire-and-forget). */
+  const persistMe = useCallback((next: MeState) => {
+    applyMe(next);
+    const payload = { ...meToArrays(next), updatedAt: new Date().toISOString() };
     AsyncStorage.setItem(ME_CACHE_KEY, JSON.stringify(payload)).catch(() => {});
     if (uid) {
       setDoc(userDataDoc(uid, "community"), payload, { merge: true }).catch(() => {});
     }
-  }, [uid]);
+  }, [uid, applyMe]);
 
   const posts: Post[] = useMemo(
     () =>
       rawPosts
-        .filter((p) => !hiddenIds.has(p.id))
+        .filter((p) => !me.hidden.has(p.id))
         .map((p) => ({
           id: p.id,
           authorId: p.authorId,
@@ -191,12 +219,12 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
           content: p.content,
           category: p.category,
           likes: p.likeCount ?? 0,
-          liked: likedIds.has(p.id),
-          saved: savedIds.has(p.id),
+          liked: me.liked.has(p.id),
+          saved: me.saved.has(p.id),
           createdAt: p.createdAt,
           isOwn: !!uid && p.authorId === uid && !p.isSeed,
         })),
-    [rawPosts, likedIds, savedIds, hiddenIds, uid],
+    [rawPosts, me, uid],
   );
 
   const addPost = useCallback(async (content: string, category: PostCategory) => {
@@ -217,28 +245,31 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   }, [uid, profile?.name]);
 
   const likePost = useCallback(async (id: string) => {
-    const isLiked = likedIds.has(id);
-    const next = new Set(likedIds);
-    if (isLiked) next.delete(id);
-    else next.add(id);
-    setLikedIds(next);
-    persistMe(next, savedIds, hiddenIds);
+    // meRef is updated synchronously by persistMe/applyMe, so double-taps
+    // resolve as like -> unlike (+1 then -1) instead of two +1 writes.
+    const cur = meRef.current;
+    const isLiked = cur.liked.has(id);
+    const liked = new Set(cur.liked);
+    if (isLiked) liked.delete(id);
+    else liked.add(id);
+    persistMe({ ...cur, liked });
 
     if (uid) {
       updateDoc(postDoc(id), { likeCount: increment(isLiked ? -1 : 1) }).catch(() => {});
     }
-  }, [likedIds, savedIds, hiddenIds, uid, persistMe]);
+  }, [uid, persistMe]);
 
   const savePost = useCallback(async (id: string) => {
-    const next = new Set(savedIds);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSavedIds(next);
-    persistMe(likedIds, next, hiddenIds);
-  }, [likedIds, savedIds, hiddenIds, persistMe]);
+    const cur = meRef.current;
+    const saved = new Set(cur.saved);
+    if (saved.has(id)) saved.delete(id);
+    else saved.add(id);
+    persistMe({ ...cur, saved });
+  }, [persistMe]);
 
   const deletePost = useCallback(async (id: string) => {
-    // Optimistic removal; rules only allow deleting your own posts.
+    // Optimistic removal; rules only allow deleting your own posts, and the
+    // live snapshot restores the post if the delete is rejected.
     setRawPosts((prev) => prev.filter((p) => p.id !== id));
     try {
       await deleteDoc(postDoc(id));
@@ -250,10 +281,10 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     const post = rawPosts.find((p) => p.id === id);
 
     // Hide immediately on this account (synced across the user's devices).
-    const nextHidden = new Set(hiddenIds);
-    nextHidden.add(id);
-    setHiddenIds(nextHidden);
-    persistMe(likedIds, savedIds, nextHidden);
+    const cur = meRef.current;
+    const hidden = new Set(cur.hidden);
+    hidden.add(id);
+    persistMe({ ...cur, hidden });
 
     try {
       await addDoc(reportsCollection(), {
@@ -265,7 +296,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
       });
     } catch {}
-  }, [uid, rawPosts, likedIds, savedIds, hiddenIds, persistMe]);
+  }, [uid, rawPosts, persistMe]);
 
   return (
     <CommunityContext.Provider value={{ posts, loading, addPost, likePost, savePost, deletePost, reportPost }}>

@@ -76,6 +76,19 @@ export function MealProvider({ children }: { children: React.ReactNode }) {
     setState(next);
   }
 
+  // If the signed-in account changes (sign-out, or a different user signing
+  // in on this device), drop all in-memory data so the previous user's
+  // meals can never leak into — or be migrated into — the next account.
+  // Cold start (null -> uid) must NOT reset, or migration would lose the
+  // device data loaded from AsyncStorage.
+  const prevUidRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevUidRef.current !== null && uid !== prevUidRef.current) {
+      applyState(DEFAULT_STATE);
+    }
+    prevUidRef.current = uid;
+  }, [uid]);
+
   // Load the local cache first — the app must work offline.
   useEffect(() => {
     async function load() {
