@@ -65,3 +65,9 @@ id = "7O_gvIhKATv41uNx12o9X"
 uri = "file://exports/playstore-icon-512.png"
 type = "image"
 title = "Play Store icon (512×512)"
+
+[[outputs]]
+id = "ZNZirNu1wfLmoEzRU55tb"
+uri = "file://exports/playstore-feature-1024x500.png"
+type = "image"
+title = "Play Store feature graphic (1024×500)"
