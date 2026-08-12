@@ -1,0 +1,4 @@
+# core.autocrlf=true is set on Windows checkouts, which would rewrite these files
+# to CRLF and break the byte-for-byte match with what Firebase actually serves.
+# hosting/ holds the Play-required account-deletion page — keep its bytes exact.
+hosting/** -text
