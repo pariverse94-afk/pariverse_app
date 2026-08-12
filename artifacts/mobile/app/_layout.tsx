@@ -5,7 +5,6 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { setBaseUrl } from "@workspace/api-client-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -20,10 +19,6 @@ import { UserProvider, useUser } from "@/context/UserContext";
 import { FamilyProvider } from "@/context/FamilyContext";
 import { MealProvider } from "@/context/MealContext";
 import { CommunityProvider } from "@/context/CommunityContext";
-
-if (process.env.EXPO_PUBLIC_DOMAIN) {
-  setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
-}
 
 SplashScreen.preventAutoHideAsync();
 

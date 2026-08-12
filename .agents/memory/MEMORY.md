@@ -1,7 +1,8 @@
 - [Metro _tmp_ blockList](metro-tmp-blocklist.md) — Metro ENOENT crashes on pnpm packages that create then delete _tmp_N dirs during install; must block them in metro.config.js.
-- [Drizzle duplicate instance via OpenTelemetry](drizzle-otel-dedup.md) — firebase-admin introduces @opentelemetry/api, causing pnpm to create two drizzle-orm peer-dep variants; fix with workspace override.
-- [Firebase Auth migration pattern](firebase-auth-pattern.md) — full stack Firebase Auth replacing Supabase: mobile (firebase JS SDK + initializeAuth + AsyncStorage persistence), API (firebase-admin verifyIdToken middleware).
-- [Firebase RN auth init — web vs native](firebase-rn-auth-init.md) — getReactNativePersistence not in web TS types; use Platform.OS guard + require() on native; EXPO_PUBLIC_FIREBASE_* need .env.local for dev server.
+- [API tier removal](api-tier-removal.md) — the Express/Cloud Run/Postgres tier and both Anthropic libs were deleted 2026-08-11; they had been dead since 2026-07-22. Read before "restoring" any backend.
+- [Drizzle duplicate instance via OpenTelemetry](drizzle-otel-dedup.md) — **OBSOLETE** (drizzle + firebase-admin both removed with the API tier); kept only in case a server tier returns.
+- [Firebase Auth migration pattern](firebase-auth-pattern.md) — full stack Firebase Auth replacing Supabase: mobile (firebase JS SDK + initializeAuth + AsyncStorage persistence). The API-side verifyIdToken middleware described there no longer exists.
+- Firebase RN auth init — web vs native: `getReactNativePersistence` is not in the web TS types; use a `Platform.OS` guard + `require()` on native; `EXPO_PUBLIC_FIREBASE_*` need `.env.local` for the dev server. (The backing note file was never committed — this line is the whole record.)
 - [EAS build debugging](eas-build-debugging.md) — never guess Gradle failures; fetch real logs via eas CLI (brotli-compressed); Reanimated 4 requires newArchEnabled true + worklets pkg.
 - [Android Google Sign-In](google-signin-android.md) — web-client+custom-scheme OAuth is blocked by Google; use native google-signin module + SHA-1 in Firebase; SHA-1 parseable from APK sig block.
 - [Local-first Firestore sync](local-first-firestore-sync.md) — Supabase fully removed; onSnapshot sync + device→cloud migration; providers MUST reset state on uid change (shared-device privacy) but never on cold start.

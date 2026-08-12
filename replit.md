@@ -1,17 +1,24 @@
-# Parivaar — Family App for Urban India
+# Pariverse — Family App for Urban India
 
-A mobile app built with Expo for nuclear families in urban India. Parivaar means "family" in Hindi.
+A mobile app built with Expo for nuclear families in urban India.
+
+> **Naming:** `app.json` ships `name: "Pariverse"` and package `com.pariverse.app`. Some
+> surfaces still say "Parivaar" (Hindi for "family"), including the live account-deletion
+> page. Pick one and make it consistent — a mismatch between the Play listing and the
+> deletion page is a policy risk.
 
 ## Architecture
 
 **Monorepo (pnpm workspaces)**
 
-- `artifacts/mobile` — Expo (SDK 54, expo-router v6) mobile app
-- `artifacts/api-server` — Express API server (TypeScript, ESBuild)
-- `lib/api-spec` — OpenAPI spec + Orval codegen
-- `lib/api-client-react` — Generated React Query hooks
-- `lib/integrations-anthropic-ai` — Replit AI integrations (Anthropic/Claude)
-- `lib/db` — Drizzle ORM schema (PostgreSQL, DATABASE_URL in env)
+- `artifacts/mobile` — Expo (SDK 54, expo-router v6) mobile app — the Play Store artifact
+- `artifacts/mockup-sandbox` — Vite design sandbox, not shipped
+- `hosting/` — Firebase Hosting; serves the Play-required account-deletion page
+- `scripts` — misc workspace tooling
+
+There is **no server tier**. The Express API, Postgres/Drizzle, OpenAPI codegen and the
+Cloud Run deploy were deleted on 2026-08-11 after being dead since 2026-07-22.
+See `.agents/memory/api-tier-removal.md`.
 
 ## Features
 
@@ -21,12 +28,12 @@ A mobile app built with Expo for nuclear families in urban India. Parivaar means
 - Progress bar showing completion rate
 - AsyncStorage persistence
 
-### 2. AI-Assisted Meal Planning (`POST /api/ai/meals`)
+### 2. AI-Assisted Meal Planning (direct Groq call from the app)
 - Weekly meal planner with Mon–Sun day tabs
 - Inventory-aware suggestions using pantry items
 - Dietary preferences (Vegetarian, Vegan, etc.)
 - Nutritional goals (High Protein, Low Oil, etc.)
-- Claude-powered Indian cuisine meal suggestions with Hindi names
+- Groq-powered Indian cuisine meal suggestions with Hindi names
 
 ### 3. Mom's Corner (Community)
 - Social feed for moms with categories: Recipes, Parenting, Health, General
@@ -34,22 +41,25 @@ A mobile app built with Expo for nuclear families in urban India. Parivaar means
 - Pre-seeded with realistic Indian parenting content
 - AsyncStorage persistence
 
-### 4. AI First Aid (`POST /api/ai/firstaid` — SSE streaming)
+### 4. AI First Aid (direct streaming Groq call from the app)
 - Grid of 10 common childhood conditions
-- Streaming AI guidance from Claude
+- Streaming AI guidance from Groq
 - Child age + severity inputs
 - Emergency helpline references (108, 1800-180-1104)
 - Medical disclaimer throughout
 
 ## AI Setup
 
-Uses **Replit AI Integrations** (Anthropic) — no user API key needed.
+Uses **Groq**, model `llama-3.3-70b-versatile`. Not Anthropic — older revisions of this file
+said Claude and were wrong even then.
 
-Environment variables auto-provided:
-- `AI_INTEGRATIONS_ANTHROPIC_BASE_URL`
-- `AI_INTEGRATIONS_ANTHROPIC_API_KEY`
+The mobile app calls `https://api.groq.com/openai/v1/chat/completions` **directly**, using
+`EXPO_PUBLIC_GROQ_API_KEY` injected as an EAS secret.
 
-Model: `claude-sonnet-4-6`
+> ⚠️ `EXPO_PUBLIC_*` values are compiled into the app bundle. The Groq key is therefore
+> extractable from any shipped APK/AAB. Rotating it does not fix that on its own — the call
+> has to move behind a server that holds the key. This is a known, accepted-for-now risk and
+> the top open security item.
 
 ## Design System
 
@@ -88,22 +98,31 @@ components/
 └── ErrorBoundary.tsx
 ```
 
-## API Routes
+## Outbound calls
 
-- `GET /api/healthz` — Health check
-- `POST /api/ai/meals` — Generate meal suggestions (JSON)
-- `POST /api/ai/firstaid` — First aid guidance (SSE stream)
+There are no first-party API routes. The app talks to three external services directly:
+
+- **Firebase Auth** — Google Sign-In via the native module
+- **Cloud Firestore** — local-first sync (`onSnapshot`); see
+  `.agents/memory/local-first-firestore-sync.md`
+- **Groq** — `https://api.groq.com/openai/v1/chat/completions`, for meals and first aid
 
 ## Environment Variables
 
-- `DATABASE_URL` — PostgreSQL connection string (set)
-- `SESSION_SECRET` — Session secret (set)
-- `EXPO_PUBLIC_DOMAIN` — Set to `$REPLIT_DEV_DOMAIN` by Expo workflow
-- `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` — Auto by Replit AI integrations
-- `AI_INTEGRATIONS_ANTHROPIC_API_KEY` — Auto by Replit AI integrations
+All are `EXPO_PUBLIC_*` and are supplied by `artifacts/mobile/eas.json` or EAS secrets. They
+are compiled into the bundle and are public by design — except the Groq key, which should not
+be (see the AI Setup warning above).
+
+- `EXPO_PUBLIC_FIREBASE_*` — project identifiers, safe to ship
+- `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` — safe to ship
+- `EXPO_PUBLIC_GROQ_API_KEY` — **a real credential, shipped in the binary**
+
+`EXPO_PUBLIC_DOMAIN` still appears in the `development` and `preview` EAS profiles pointing at
+dead Replit domains. Nothing reads it any more; it can be removed.
 
 ## Known Notes
 
-- Supabase integration not yet connected (user offered to provide)
-- All mobile state persists via AsyncStorage (no backend DB for mobile data yet)
-- The `lib/db` conversations/messages schema is present but not pushed yet
+- Supabase was fully removed. Any remaining reference to it in this file or elsewhere is stale.
+- Mobile state is local-first Firestore; AsyncStorage is used for auth persistence.
+- Account deletion: in-app screen at `app/delete-account.tsx` (mailto), plus the Play-required
+  public page at <https://pariverse-prod.web.app/delete-account>, sourced from `hosting/`.

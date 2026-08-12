@@ -7,6 +7,11 @@ out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
+.expo-export-web-test/
+
+# Firebase Hosting deploy cache (hosting/ itself IS tracked — it holds the
+# Play-required account-deletion page)
+.firebase/
 
 # dependencies
 node_modules
@@ -48,6 +53,11 @@ Thumbs.db
 .cache/
 .local/
 
+# Env files — NEVER commit these (repo is public)
+.env
+.env.*
+!.env.example
+
 # Google Cloud / Firebase secrets — NEVER commit these
 # google-services.json and GoogleService-Info.plist are intentionally tracked
 # (they are project identifiers, not private keys — security is in Firebase rules)
@@ -55,12 +65,10 @@ google-play-key.json
 *-service-account*.json
 firebase-adminsdk-*.json
 
-# Terraform state (contains secrets in plaintext)
-infra/.terraform/
-infra/.terraform.lock.hcl
-infra/terraform.tfstate
-infra/terraform.tfstate.backup
-infra/*.tfplan
-
-# Local overrides (safe to have locally, not in git)
-infra/terraform.tfvars.local
+# Terraform state (contains secrets in plaintext). infra/ was removed with the
+# API tier, but keep these so a stray local terraform run can never commit state.
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tfvars.local
