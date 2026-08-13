@@ -12,6 +12,18 @@ const firebaseConfig = {
   appId:             process.env.EXPO_PUBLIC_FIREBASE_APP_ID              ?? "",
 };
 
+// Every value above falls back to "", which makes a missing env file surface as
+// confusing auth errors deep in a sign-in flow rather than as a clear setup
+// problem. Fail loudly in dev instead. Production keeps the silent fallback so a
+// release can never hard-crash on startup over this.
+if (__DEV__ && (!firebaseConfig.apiKey || !firebaseConfig.appId)) {
+  throw new Error(
+    "Firebase config is missing. Copy artifacts/mobile/.env.example to " +
+      ".env.local, fill in the values, and restart the dev server — Expo only " +
+      "reads .env.local at startup, so a hot reload will not pick it up.",
+  );
+}
+
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // On web, Firebase automatically uses localStorage persistence — getAuth() is enough.

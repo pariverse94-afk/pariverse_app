@@ -10,8 +10,11 @@ catalog:
   '@tailwindcss/vite': ^4.1.14
   '@tanstack/react-query': ^5.90.21
   '@types/node': ^25.3.3
-  '@types/react': ^19.2.0
-  '@types/react-dom': ^19.2.0
+  # Kept in lockstep with artifacts/mobile's pins (~19.1.10 / ~19.1.7) so the
+  # workspace resolves exactly one copy of the React types. See the
+  # '@types/react' entry under overrides for why this matters.
+  '@types/react': 19.1.17
+  '@types/react-dom': ~19.1.7
   '@vitejs/plugin-react': ^5.0.4
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
@@ -38,6 +41,13 @@ onlyBuiltDependencies:
   - unrs-resolver
 
 overrides:
+  # Force a single copy of the React types across the workspace. Two copies
+  # (mobile pins ~19.1.10 for Expo SDK 54; the catalog asked for ^19.2.0) put
+  # both in one tsc program, and TS then reports every ref/element type as
+  # "two different types with this name exist" -- which kept `pnpm typecheck`
+  # permanently red and useless as a gate. Pinned to what mobile needs, since
+  # mobile is the shipped artifact. Bump this when Expo bumps its React types.
+  '@types/react': 19.1.17
   '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-arm64': '-'
   '@expo/ngrok-bin>@expo/ngrok-bin-darwin-x64': '-'
