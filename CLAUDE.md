@@ -36,6 +36,32 @@ those areas, and add a note when you solve a new one.
 Expo app → Firebase Auth + Cloud Firestore (direct, local-first) and → Groq (direct).
 Nothing else. No API of our own.
 
+## Blast radius — check before you act
+
+The app is live on Play. **Repo edits cannot reach an installed build**; the shipped AAB is
+frozen. Runtime services can, immediately and with no review:
+
+| Reaches live users at once | Cannot affect them |
+|---|---|
+| Deploying Firestore rules | Any source/config/doc edit |
+| Revoking/rotating the Groq key | `.env.local`, `package.json`, lockfile |
+| Firestore data-shape changes | `eas.json` (shapes *future* builds only) |
+| Firebase Auth / API-key config | |
+| Deploying Firebase Hosting | |
+| Play Console changes | |
+
+**Say so and get confirmation before doing anything in the left column.**
+
+The exception that inverts this: once EAS Update ships in a build, JS changes published to
+that channel reach users automatically. Not configured yet as of 2026-08-13.
+
+## Tooling
+
+- **`firebase-deploy` skill** — use for *any* Firebase deploy. Enforces diff-live-vs-repo,
+  dry-run, confirmation, and post-deploy verification.
+- **`play-compliance` skill** — run before every production build or Play submission.
+- **`security-audit` agent** — read-only sweep for shipped secrets and rules weaknesses.
+
 ## Commands
 
 Package manager is **pnpm** and the root `preinstall` hard-fails under npm/yarn. Never run
