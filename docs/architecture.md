@@ -20,7 +20,7 @@ graph TB
 
     subgraph fb["☁️ Firebase / GCP — project pariverse-prod"]
         auth["<b>Firebase Auth</b><br/>Google Sign-In (native module)"]
-        fs["<b>Cloud Firestore</b><br/>local-first sync via onSnapshot"]
+        fs["<b>Cloud Firestore</b><br/>local-first sync via onSnapshot<br/>per-user data is private —<br/><b>communityPosts is one global feed</b>"]
         rules["<b>Security rules</b><br/>firestore.rules<br/><i>the entire access-control layer</i>"]
         host["<b>Firebase Hosting</b><br/>hosting/ → /delete-account<br/><i>Play-required, must return 200</i>"]
         fs --- rules
@@ -67,6 +67,43 @@ server-side check behind them. A rules mistake exposes every user at once, which
 | `emailIndex/{email}` | uid lookup — "is this person on Pariverse?" | `get` only; **`list` denied** so emails can't be enumerated |
 | `communityPosts/{id}` | **the shared Mom's Corner feed — global, all users** | **every signed-in user reads every post**; author edits/deletes; others may only change `likeCount` by ±1 |
 | `reports/{id}` | UGC reports | create-only; handled in the Firebase console |
+
+### Who can see what
+
+The runtime diagram above shows one device, which hides the thing most people get wrong here.
+With two users in the picture:
+
+```mermaid
+graph TB
+    subgraph A["👤 User A"]
+        da["profile · chores · meal plans<br/>liked / saved / hidden ids"]
+    end
+    subgraph B["👤 User B"]
+        db["profile · chores · meal plans<br/>liked / saved / hidden ids"]
+    end
+
+    subgraph priv["🔒 users/{uid}/** — walled off per user"]
+        ua["users/A"]
+        ub["users/B"]
+    end
+
+    shared["🌍 <b>communityPosts</b><br/><b>ONE global feed — everybody sees everything</b><br/>each post carries the author's <b>real profile name</b>"]
+
+    da <-->|"owner only"| ua
+    db <-->|"owner only"| ub
+    da <-->|"read all · write own"| shared
+    db <-->|"read all · write own"| shared
+    ua -.->|"❌ cannot read"| ub
+    ub -.->|"❌ cannot read"| ua
+
+    classDef danger stroke:#C44B2B,stroke-width:3px
+    classDef safe stroke:#2D6A4F,stroke-width:2px
+    class shared danger
+    class priv,ua,ub safe
+```
+
+Everything under `users/{uid}` is genuinely private — User A cannot read User B's family data,
+meals or profile. **`communityPosts` is the exception, and it is a single global pool.**
 
 ### Mom's Corner is a single global feed
 
