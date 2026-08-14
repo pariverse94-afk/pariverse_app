@@ -54,13 +54,42 @@ server-side check behind them. A rules mistake exposes every user at once, which
 
 ## Data model
 
+> **Two different things are called "community" — don't confuse them.**
+> `users/{uid}/data/community` is *your private state* about the feed (which posts you liked,
+> saved or hid) and is owner-only. `communityPosts` is **the feed itself, and it is a single
+> global feed shared by every user of the app.** See [Mom's Corner is global](#moms-corner-is-a-single-global-feed).
+
 | Path | Contents | Access |
 |---|---|---|
 | `users/{uid}` | profile — name, family name, email | owner only |
-| `users/{uid}/data/{family\|meals\|community}` | chores, meal plans, saved/liked posts | owner only |
+| `users/{uid}/data/{family\|meals}` | chores, meal plans | owner only |
+| `users/{uid}/data/community` | **your own** liked / saved / hidden post ids | owner only |
 | `emailIndex/{email}` | uid lookup — "is this person on Pariverse?" | `get` only; **`list` denied** so emails can't be enumerated |
-| `communityPosts/{id}` | Mom's Corner feed | any signed-in user reads; author edits/deletes; others may only change `likeCount` by ±1 |
+| `communityPosts/{id}` | **the shared Mom's Corner feed — global, all users** | **every signed-in user reads every post**; author edits/deletes; others may only change `likeCount` by ±1 |
 | `reports/{id}` | UGC reports | create-only; handled in the Firebase console |
+
+### Mom's Corner is a single global feed
+
+`firestore.rules` says `allow read: if signedIn()`, and the query in
+`context/CommunityContext.tsx:164` has **no `where()` clause** — it is
+`orderBy("createdAt","desc")` with `limit(200)` across the whole collection. There is no
+family, group, or region scoping anywhere.
+
+So every user of the app sees every post ever written by every other user. Posts carry
+`authorName`, taken from the poster's **real profile name** (falling back to "Pariverse Mom").
+
+That is working as designed, but it has consequences worth deciding deliberately:
+
+- **Closed-testing posts are in production Firestore** and will be visible to real users at
+  launch unless deleted.
+- **Real names are attached to health-adjacent content.** A parent posting about a child's
+  illness publishes it under their own name to the entire user base. Users may reasonably
+  expect "Mom's Corner" to be more private than it is.
+- **Moderation is manual** — `reports` can only be created by clients and read in the console.
+- **The feed silently truncates at 200 posts.** No pagination exists.
+- Five hardcoded seed posts (`CommunityContext.tsx:66-70`, `isSeed: true`) render client-side
+  with invented author names. They are not in Firestore and cannot be moderated or removed
+  without a build.
 
 No composite indexes exist, and none are needed: the app issues exactly one query —
 `orderBy("createdAt","desc")` with `limit(200)` in `context/CommunityContext.tsx` — which the
