@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@firebase/auth": "^1.13.3",
+    "expo-dev-client": "~6.0.21",
     "firebase": "^12.16.0"
   }
 }
