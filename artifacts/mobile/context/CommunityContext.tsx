@@ -233,7 +233,11 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const addPost = useCallback(async (content: string, category: PostCategory) => {
     if (!uid) return;
     const color = OWN_COLORS[Math.floor(Math.random() * OWN_COLORS.length)];
-    const authorName = profile?.name?.trim() || "Pariverse Mom";
+    // Byline is the community name, never the real profile name — posts are
+    // visible to every user of the app. The composer asks for one before the
+    // first post, so the fallbacks here only cover a user whose profile failed
+    // to load; we still avoid leaking `profile.name` in that case.
+    const authorName = profile?.communityName?.trim() || "Pariverse Mom";
     try {
       await addDoc(postsCollection(), {
         authorId: uid,
@@ -245,7 +249,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
       });
     } catch {}
-  }, [uid, profile?.name]);
+  }, [uid, profile?.communityName]);
 
   const likePost = useCallback(async (id: string) => {
     // meRef is updated synchronously by persistMe/applyMe, so double-taps

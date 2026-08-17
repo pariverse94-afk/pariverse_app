@@ -32,11 +32,12 @@ function avatarColor(name: string): string {
 export function ProfileButton() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { profile, saveProfile, signOut } = useUser();
+  const { profile, saveProfile, saveCommunityName, signOut } = useUser();
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [editName, setEditName] = useState("");
   const [editFamily, setEditFamily] = useState("");
+  const [editCommunity, setEditCommunity] = useState("");
   const [saving, setSaving] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -44,6 +45,7 @@ export function ProfileButton() {
     if (sheetVisible && profile) {
       setEditName(profile.name ?? "");
       setEditFamily(profile.familyName ?? "");
+      setEditCommunity(profile.communityName ?? "");
     }
   }, [sheetVisible, profile]);
 
@@ -57,6 +59,11 @@ export function ProfileButton() {
     setSaving(true);
     try {
       await saveProfile(editName.trim(), editFamily.trim());
+      // Only write a community name if one already existed. Setting it here for
+      // a user who has never posted would pick a public byline on their behalf.
+      if (profile?.communityName && editCommunity.trim()) {
+        await saveCommunityName(editCommunity.trim());
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSheetVisible(false);
     } catch {
@@ -174,6 +181,36 @@ export function ProfileButton() {
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />
+
+            {!!profile?.communityName && (
+              <>
+                <Text style={[styles.fieldLabel, { color: colors.foreground }]}>
+                  Community name
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.muted,
+                      color: colors.foreground,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  value={editCommunity}
+                  onChangeText={setEditCommunity}
+                  placeholder="Shown on your Mom's Corner posts"
+                  placeholderTextColor={colors.mutedForeground}
+                  maxLength={30}
+                  autoCapitalize="words"
+                  returnKeyType="done"
+                  onSubmitEditing={handleSave}
+                />
+                <Text style={[styles.communityHint, { color: colors.mutedForeground }]}>
+                  Everyone using Pariverse can see this on your posts. Changing it updates
+                  future posts; ones you've already shared keep the name they were posted with.
+                </Text>
+              </>
+            )}
 
             <TouchableOpacity
               style={[
@@ -302,6 +339,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, marginVertical: 16 },
   sectionLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 1, marginBottom: 12 },
   fieldLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 6 },
+  communityHint: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16, marginTop: -8, marginBottom: 14 },
   input: {
     borderWidth: 1,
     borderRadius: 12,

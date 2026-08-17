@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useCommunity, type PostCategory } from "@/context/CommunityContext";
+import { useUser } from "@/context/UserContext";
 import { PostCard } from "@/components/PostCard";
 import { ProfileButton } from "@/components/ProfileButton";
 
@@ -40,17 +41,37 @@ export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { posts, addPost, likePost, savePost, deletePost, reportPost } = useCommunity();
+  const { profile, saveCommunityName } = useUser();
   const [filter, setFilter] = useState<PostCategory | "all">("all");
   const [postModalVisible, setPostModalVisible] = useState(false);
   const [newContent, setNewContent] = useState("");
   const [newCategory, setNewCategory] = useState<PostCategory>("general");
+  const [communityNameInput, setCommunityNameInput] = useState("");
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
+  // Asked once, at the first post. Deliberately not in onboarding — a third
+  // question before the user has seen any value costs signups.
+  const needsCommunityName = !profile?.communityName;
+
   const filteredPosts = filter === "all" ? posts : posts.filter((p) => p.category === filter);
 
-  const handlePost = () => {
-    if (!newContent.trim()) return;
+  const openComposer = () => {
+    if (needsCommunityName) {
+      // Default to the first name only — a sensible starting point that is
+      // still a deliberate choice, not the full real name applied silently.
+      setCommunityNameInput(profile?.name?.trim().split(" ")[0] ?? "");
+    }
+    setPostModalVisible(true);
+  };
+
+  const canPost = !!newContent.trim() && (!needsCommunityName || !!communityNameInput.trim());
+
+  const handlePost = async () => {
+    if (!canPost) return;
+    if (needsCommunityName) {
+      await saveCommunityName(communityNameInput.trim());
+    }
     addPost(newContent.trim(), newCategory);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setNewContent("");
@@ -80,7 +101,7 @@ export default function CommunityScreen() {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={[styles.newPostBtn, { backgroundColor: colors.primary }]}
-            onPress={() => setPostModalVisible(true)}
+            onPress={openComposer}
             testID="new-post-btn"
           >
             <Feather name="edit-2" size={16} color="#fff" />
@@ -153,6 +174,29 @@ export default function CommunityScreen() {
               </TouchableOpacity>
             </View>
 
+            {needsCommunityName && (
+              <View style={styles.nameBlock}>
+                <Text style={[styles.inputLabel, { color: colors.mutedForeground, marginTop: 0 }]}>
+                  Choose your community name
+                </Text>
+                <TextInput
+                  style={[styles.nameInput, { backgroundColor: colors.muted, color: colors.foreground, borderColor: colors.border }]}
+                  placeholder="e.g. Priya"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={communityNameInput}
+                  onChangeText={setCommunityNameInput}
+                  maxLength={30}
+                  autoCapitalize="words"
+                  testID="community-name-input"
+                />
+                <Text style={[styles.nameHint, { color: colors.mutedForeground }]}>
+                  This is what other mothers see on your posts. Everyone using Pariverse can
+                  read Mom's Corner, so pick something you're comfortable being public — it
+                  doesn't have to be your full name. You can change it later in your profile.
+                </Text>
+              </View>
+            )}
+
             <TextInput
               style={[styles.textArea, { backgroundColor: colors.muted, color: colors.foreground, borderColor: colors.border }]}
               placeholder="Share a tip, recipe, or experience..."
@@ -186,9 +230,9 @@ export default function CommunityScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.postBtn, { backgroundColor: colors.primary, opacity: newContent.trim() ? 1 : 0.5 }]}
+              style={[styles.postBtn, { backgroundColor: colors.primary, opacity: canPost ? 1 : 0.5 }]}
               onPress={handlePost}
-              disabled={!newContent.trim()}
+              disabled={!canPost}
               testID="submit-post-btn"
             >
               <Text style={styles.postBtnText}>Post</Text>
@@ -221,6 +265,9 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
   textArea: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14, fontFamily: "Inter_400Regular", minHeight: 100, marginBottom: 16 },
   inputLabel: { fontSize: 13, fontFamily: "Inter_500Medium", marginBottom: 8 },
+  nameBlock: { marginBottom: 16 },
+  nameInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14, fontFamily: "Inter_400Regular" },
+  nameHint: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17, marginTop: 8 },
   categoryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
   categoryChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
   categoryChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },

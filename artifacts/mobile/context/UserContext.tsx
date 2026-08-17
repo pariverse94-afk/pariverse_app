@@ -10,6 +10,14 @@ export interface UserProfile {
   name: string;
   familyName: string;
   email?: string;
+  /**
+   * Public byline used on Mom's Corner posts. Deliberately separate from
+   * `name`: posts are visible to every user of the app, and people share
+   * things about their children's health there. Undefined until the user is
+   * asked, which happens the first time they post — not during onboarding,
+   * where a third question before any value is delivered costs signups.
+   */
+  communityName?: string;
 }
 
 interface UserContextValue {
@@ -18,6 +26,8 @@ interface UserContextValue {
   profile: UserProfile | null;
   isLoaded: boolean;
   saveProfile: (name: string, familyName: string) => Promise<void>;
+  /** Set the public byline used on community posts. */
+  saveCommunityName: (communityName: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,6 +54,18 @@ function pushProfileToCloud(uid: string, name: string, familyName: string, email
   }
 }
 
+/**
+ * Written on its own rather than through pushProfileToCloud so that editing
+ * your display name can never touch the community byline, and vice versa.
+ */
+function pushCommunityNameToCloud(uid: string, communityName: string) {
+  setDoc(
+    userDoc(uid),
+    { communityName, updatedAt: new Date().toISOString() },
+    { merge: true },
+  ).catch(() => {});
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -65,6 +87,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             name: data.name,
             familyName: data.familyName,
             email: data.email ?? email,
+            communityName: data.communityName ?? undefined,
           };
           setProfile(p);
           await AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(p));
@@ -114,7 +137,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const saveProfile = useCallback(async (name: string, familyName: string) => {
     const user = auth.currentUser ?? session;
     const uid = user?.uid ?? `anon_${Date.now()}`;
-    const p: UserProfile = { id: uid, name, familyName, email: user?.email ?? undefined };
+    // Carry communityName through. This rebuilds the whole profile object, so
+    // omitting it here would silently reset a user's community byline every
+    // time they edited their display name.
+    const p: UserProfile = {
+      id: uid,
+      name,
+      familyName,
+      email: user?.email ?? undefined,
+      communityName: profile?.communityName,
+    };
 
     if (user) {
       pushProfileToCloud(user.uid, name, familyName, user.email);
@@ -127,6 +159,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     setProfile(p);
+  }, [session, profile?.communityName]);
+
+  const saveCommunityName = useCallback(async (communityName: string) => {
+    const trimmed = communityName.trim();
+    if (!trimmed) return;
+
+    const user = auth.currentUser ?? session;
+    const uid = user?.uid;
+    if (!uid) return;
+
+    setProfile((prev) => {
+      const next = prev
+        ? { ...prev, communityName: trimmed }
+        : { id: uid, name: trimmed, familyName: "", communityName: trimmed };
+      AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+
+    pushCommunityNameToCloud(uid, trimmed);
   }, [session]);
 
   const signOut = useCallback(async () => {
@@ -143,7 +194,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ session, profile, isLoaded, saveProfile, signOut }}>
+    <UserContext.Provider value={{ session, profile, isLoaded, saveProfile, saveCommunityName, signOut }}>
       {children}
     </UserContext.Provider>
   );
