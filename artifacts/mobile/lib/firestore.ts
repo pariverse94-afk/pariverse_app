@@ -46,6 +46,19 @@ export const emailIndexDoc = (email: string) =>
 export const postsCollection = () => collection(db, "communityPosts");
 export const postDoc = (id: string) => doc(db, "communityPosts", id);
 
+/**
+ * communityPosts/{postId}/likes/{uid} — one document per user per post, so a
+ * like is a fact on the server rather than a number the client asserts. The
+ * document id being the uid is what makes a second like impossible: re-liking
+ * overwrites the same path instead of adding another.
+ *
+ * `likeCount` on the parent stays as a denormalised counter for display; these
+ * documents are what make it auditable and, once the rules are tightened,
+ * enforceable.
+ */
+export const postLikeDoc = (postId: string, uid: string) =>
+  doc(db, "communityPosts", postId, "likes", uid);
+
 /** UGC reports — create-only for clients, reviewed in the Firebase console. */
 export const reportsCollection = () => collection(db, "reports");
 

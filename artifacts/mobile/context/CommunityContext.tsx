@@ -9,9 +9,10 @@ import {
   query,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { postDoc, postsCollection, reportsCollection, userDataDoc } from "@/lib/firestore";
+import { db, postDoc, postLikeDoc, postsCollection, reportsCollection, userDataDoc } from "@/lib/firestore";
 import { useUser } from "@/context/UserContext";
 
 export type PostCategory = "recipe" | "parenting" | "health" | "general";
@@ -261,9 +262,22 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     else liked.add(id);
     persistMe({ ...cur, liked });
 
-    if (uid) {
-      updateDoc(postDoc(id), { likeCount: increment(isLiked ? -1 : 1) }).catch(() => {});
+    if (!uid) return;
+
+    // The like document and the counter move together in one batch, so the
+    // count can never drift from the set of people who actually liked. Once
+    // the rules are tightened (they still permit a bare increment, for the
+    // sake of builds already on testers' devices) this pairing is what makes
+    // an inflated count impossible rather than merely inconvenient.
+    const batch = writeBatch(db);
+    const likeRef = postLikeDoc(id, uid);
+    if (isLiked) {
+      batch.delete(likeRef);
+    } else {
+      batch.set(likeRef, { uid, createdAt: new Date().toISOString() });
     }
+    batch.update(postDoc(id), { likeCount: increment(isLiked ? -1 : 1) });
+    batch.commit().catch(() => {});
   }, [uid, persistMe]);
 
   const savePost = useCallback(async (id: string) => {

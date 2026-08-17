@@ -49,6 +49,14 @@ service cloud.firestore {
 
       // The author can edit their own post. Everyone else may only change
       // likeCount, and only by exactly +1 or -1 (the like button).
+      //
+      // NOTE: a bare ±1 is still permitted here on purpose. It is what builds
+      // already on testers' devices send, and those builds cannot be updated.
+      // It is also the remaining hole: nothing in this branch ties the counter
+      // to the likes/{uid} document below, so a determined client can repeat
+      // +1. Closing it means requiring the paired write, which would break
+      // every installed build the moment it deployed — so it waits until a
+      // client that writes both is actually in users' hands.
       allow update: if signedIn() && (
         resource.data.authorId == request.auth.uid
         || (
@@ -57,6 +65,21 @@ service cloud.firestore {
               || request.resource.data.likeCount == resource.data.likeCount - 1)
         )
       );
+
+      // ── Who actually liked what ──────────────────────────────────────────
+      // One document per user per post, keyed by uid. Because the id *is* the
+      // uid, a second like from the same account overwrites rather than adds —
+      // duplicate likes are impossible by construction, not by validation.
+      //
+      // Purely additive: nothing deployed today reads or writes this path, so
+      // granting it cannot affect an installed build.
+      match /likes/{likeUid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && likeUid == request.auth.uid
+          && request.resource.data.uid == request.auth.uid;
+        allow delete: if signedIn() && likeUid == request.auth.uid;
+      }
     }
 
     // ── UGC reports ──────────────────────────────────────────────────────

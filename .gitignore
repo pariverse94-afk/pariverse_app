@@ -72,3 +72,6 @@ firebase-adminsdk-*.json
 *.tfstate.backup
 *.tfplan
 *.tfvars.local
+
+# Private business strategy — NEVER commit (repo is public)
+MONETIZATION_ROADMAP.md
