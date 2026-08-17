@@ -56,6 +56,20 @@ norm firestore.rules > /tmp/repo.n && norm live.rules > /tmp/live.n && diff -u /
 If they differ, **the live version is the truth about user data right now**. Understand the
 difference and say so before overwriting — the repo is not automatically correct.
 
+## 2b. Run the rules tests
+
+```bash
+pnpm test:rules      # scripts/test-firestore-rules.mjs
+```
+
+**No emulator and no JDK needed** — it posts the ruleset plus simulated requests to
+`firebaserules.googleapis.com` and asks what the rules would decide. Nothing is written and
+nothing is deployed. Earlier notes claiming rules testing was blocked on installing a JDK were
+wrong; that only applies to the local emulator.
+
+Any failure blocks the deploy. Add a case whenever you add a rule — the suite is only worth
+what it covers.
+
 ## 3. Dry run
 
 ```bash
@@ -91,5 +105,5 @@ For rules, re-fetch the live ruleset and re-run the normalized diff to confirm i
 - The root `/` returning 404 is expected — only `/delete-account` is deployed.
 - `firestore.indexes.json` is intentionally empty. The app issues one query
   (`orderBy("createdAt","desc")` + `limit`), served by the automatic single-field index.
-- Rules unit tests need the Firestore emulator, which needs a JDK — not installed as of
-  2026-08-13.
+- Rules are covered by `pnpm test:rules` (Rules API, no emulator). The *local emulator* still
+  needs a JDK, but nothing here depends on it.

@@ -226,5 +226,6 @@ deployed anywhere.
   and the hosted page. Does not scale past a handful of users.
 - **No crash reporting.** An error on a user's device is invisible unless they email.
 - **No CI.** Nothing builds, tests or typechecks on push.
-- **No rules unit tests** — the Firestore emulator needs a JDK, not installed.
+- ~~No rules unit tests~~ — **26 cases now run via `pnpm test:rules`**, using Google's Rules
+  evaluation API. No emulator, no JDK. Add a case whenever you add a rule.
 - **Naming is inconsistent:** `app.json` ships `Pariverse`; the deletion page says `Parivaar`.
