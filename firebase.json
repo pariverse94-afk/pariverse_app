@@ -16,8 +16,8 @@
     {
       "source": "functions",
       "codebase": "default",
-      "runtime": "nodejs20",
-      "predeploy": ["pnpm --filter @workspace/functions run build"],
+      "runtime": "nodejs22",
+      "predeploy": ["pnpm --dir functions run build"],
       "ignore": ["node_modules", ".git", "*.log", "src", "tsconfig.json"]
     }
   ],
