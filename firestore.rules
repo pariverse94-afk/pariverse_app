@@ -57,8 +57,17 @@ service cloud.firestore {
       // +1. Closing it means requiring the paired write, which would break
       // every installed build the moment it deployed — so it waits until a
       // client that writes both is actually in users' hands.
+      // `hidden`, `hiddenAt` and `reportCount` are moderation state. They are
+      // written only by the onReportCreated function, which uses the Admin SDK
+      // and bypasses these rules entirely. No client may touch them — including
+      // the author, who would otherwise be able to un-hide their own post the
+      // moment it was moderated.
       allow update: if signedIn() && (
-        resource.data.authorId == request.auth.uid
+        (
+          resource.data.authorId == request.auth.uid
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['hidden', 'hiddenAt', 'reportCount'])
+        )
         || (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
           && (request.resource.data.likeCount == resource.data.likeCount + 1

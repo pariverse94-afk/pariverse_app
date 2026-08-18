@@ -5,6 +5,7 @@ dist
 tmp
 out-tsc
 *.tsbuildinfo
+functions/lib/
 .expo
 .expo-shared
 .expo-export-web-test/

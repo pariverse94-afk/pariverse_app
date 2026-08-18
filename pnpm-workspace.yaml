@@ -1,5 +1,6 @@
 packages:
   - artifacts/*
+  - functions
   - scripts
 
 autoInstallPeers: false

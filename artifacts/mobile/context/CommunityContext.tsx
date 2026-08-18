@@ -43,6 +43,10 @@ interface StoredPost {
   likeCount: number;
   createdAt: string;
   isSeed?: boolean;
+  /** Set by the onReportCreated function once enough distinct users report it. */
+  hidden?: boolean;
+  /** Distinct reporters, maintained server-side. Not shown in the UI. */
+  reportCount?: number;
 }
 
 /** This user's private flags (liked/saved/hidden post ids). */
@@ -214,7 +218,12 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const posts: Post[] = useMemo(
     () =>
       rawPosts
-        .filter((p) => !me.hidden.has(p.id))
+        // Moderated out (server-side, by report threshold) or hidden by this
+        // user personally. Filtered here rather than in the Firestore query on
+        // purpose: `where("hidden", "!=", true)` does NOT match documents that
+        // lack the field, and no existing post has it — so querying would blank
+        // the entire feed rather than filter it.
+        .filter((p) => p.hidden !== true && !me.hidden.has(p.id))
         .map((p) => ({
           id: p.id,
           authorId: p.authorId,

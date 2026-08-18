@@ -128,6 +128,31 @@ const CASES = [
   testCase("unlike your own like", "ALLOW", { uid: "alice", path: "/communityPosts/p1/likes/alice", method: "delete" }),
   testCase("removing someone else's like is denied", "DENY", { uid: "alice", path: "/communityPosts/p1/likes/bob", method: "delete" }),
 
+  // ── Moderation state is server-only ──────────────────────────────────────
+  // Written solely by the onReportCreated function via the Admin SDK, which
+  // bypasses rules. If any of these start passing as ALLOW, a user can
+  // un-hide their own moderated post.
+  testCase("author cannot un-hide their own post", "DENY", {
+    uid: "alice", path: "/communityPosts/p1", method: "update",
+    existing: post({ hidden: true }), data: post({ hidden: false }),
+  }),
+  testCase("author cannot reset their report count", "DENY", {
+    uid: "alice", path: "/communityPosts/p1", method: "update",
+    existing: post({ reportCount: 5 }), data: post({ reportCount: 0 }),
+  }),
+  testCase("a stranger cannot hide someone else's post", "DENY", {
+    uid: "bob", path: "/communityPosts/p1", method: "update",
+    existing: post(), data: post({ hidden: true }),
+  }),
+  testCase("author editing their own content still works", "ALLOW", {
+    uid: "alice", path: "/communityPosts/p1", method: "update",
+    existing: post(), data: post({ content: "edited" }),
+  }),
+  testCase("liking still works alongside the new restriction", "ALLOW", {
+    uid: "bob", path: "/communityPosts/p1", method: "update",
+    existing: post({ likeCount: 0 }), data: post({ likeCount: 1 }),
+  }),
+
   // ── Reports: file yes, read never ────────────────────────────────────────
   testCase("file a report as yourself", "ALLOW", { uid: "alice", path: "/reports/r1", method: "create", data: { reportedBy: "alice", postId: "p1" } }),
   testCase("filing a report as someone else is denied", "DENY", { uid: "alice", path: "/reports/r1", method: "create", data: { reportedBy: "bob", postId: "p1" } }),
