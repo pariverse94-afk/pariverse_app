@@ -12,7 +12,8 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { db, postDoc, postLikeDoc, postsCollection, reportsCollection, userDataDoc } from "@/lib/firestore";
+import { db, newPostDoc, postDoc, postLikeDoc, postsCollection, reportsCollection, userDataDoc } from "@/lib/firestore";
+import { resize, uploadImage } from "@/lib/imageUpload";
 import { useUser } from "@/context/UserContext";
 
 export type PostCategory = "recipe" | "parenting" | "health" | "general";
@@ -23,7 +24,10 @@ export interface Post {
   authorId?: string;
   authorName: string;
   authorColor: string;
+  /** Denormalised at write time — rules forbid reading another user's profile. */
+  authorPhotoUrl?: string;
   content: string;
+  imageUrl?: string;
   category: PostCategory;
   likes: number;
   liked: boolean;
@@ -38,7 +42,9 @@ interface StoredPost {
   authorId: string;
   authorName: string;
   authorColor: string;
+  authorPhotoUrl?: string;
   content: string;
+  imageUrl?: string;
   category: PostCategory;
   likeCount: number;
   createdAt: string;
@@ -59,7 +65,12 @@ interface MeState {
 interface CommunityContextValue {
   posts: Post[];
   loading: boolean;
-  addPost: (content: string, category: PostCategory) => Promise<void>;
+  /**
+   * Category is no longer chosen here — a Cloud Function classifies the text
+   * after the write. Rejects (rather than swallowing) upload failures so the
+   * composer can tell the user their photo did not go up.
+   */
+  addPost: (content: string, localImageUri?: string | null) => Promise<void>;
   likePost: (id: string) => Promise<void>;
   savePost: (id: string) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -229,7 +240,9 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
           authorId: p.authorId,
           authorName: p.authorName,
           authorColor: p.authorColor,
+          authorPhotoUrl: p.authorPhotoUrl,
           content: p.content,
+          imageUrl: p.imageUrl,
           category: p.category,
           likes: p.likeCount ?? 0,
           liked: me.liked.has(p.id),
@@ -240,7 +253,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     [rawPosts, me, uid],
   );
 
-  const addPost = useCallback(async (content: string, category: PostCategory) => {
+  const addPost = useCallback(async (content: string, localImageUri?: string | null) => {
     if (!uid) return;
     const color = OWN_COLORS[Math.floor(Math.random() * OWN_COLORS.length)];
     // Byline is the community name, never the real profile name — posts are
@@ -248,18 +261,33 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     // first post, so the fallbacks here only cover a user whose profile failed
     // to load; we still avoid leaking `profile.name` in that case.
     const authorName = profile?.communityName?.trim() || "Pariverse Mom";
-    try {
-      await addDoc(postsCollection(), {
-        authorId: uid,
-        authorName,
-        authorColor: color,
-        content,
-        category,
-        likeCount: 0,
-        createdAt: new Date().toISOString(),
-      });
-    } catch {}
-  }, [uid, profile?.communityName]);
+
+    // Allocate the id before writing anything. An image needs a stable path,
+    // but addDoc only hands back an id after the document exists — so the
+    // alternative is writing the post first and patching in the URL, which
+    // renders a post with a missing image for as long as the upload takes.
+    const ref = newPostDoc();
+
+    let imageUrl: string | undefined;
+    if (localImageUri) {
+      const resized = await resize(localImageUri, "post");
+      imageUrl = await uploadImage(resized, `postImages/${ref.id}/image.jpg`);
+    }
+
+    // Category is assigned server-side by the classifier; "general" is what the
+    // feed shows for the second or two before that lands.
+    await setDoc(ref, {
+      authorId: uid,
+      authorName,
+      authorColor: color,
+      ...(profile?.photoUrl ? { authorPhotoUrl: profile.photoUrl } : {}),
+      content,
+      ...(imageUrl ? { imageUrl } : {}),
+      category: "general" as PostCategory,
+      likeCount: 0,
+      createdAt: new Date().toISOString(),
+    });
+  }, [uid, profile?.communityName, profile?.photoUrl]);
 
   const likePost = useCallback(async (id: string) => {
     // meRef is updated synchronously by persistMe/applyMe, so double-taps

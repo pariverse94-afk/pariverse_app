@@ -18,6 +18,12 @@ export interface UserProfile {
    * where a third question before any value is delivered costs signups.
    */
   communityName?: string;
+  /**
+   * Public avatar shown on community posts. Optional by design — skipping it
+   * keeps the coloured initial, which is what makes the community byline
+   * genuinely pseudonymous rather than pseudonymous-until-you-see-the-face.
+   */
+  photoUrl?: string;
 }
 
 interface UserContextValue {
@@ -28,6 +34,8 @@ interface UserContextValue {
   saveProfile: (name: string, familyName: string) => Promise<void>;
   /** Set the public byline used on community posts. */
   saveCommunityName: (communityName: string) => Promise<void>;
+  /** Set the public avatar. Pass null to remove it. */
+  savePhotoUrl: (photoUrl: string | null) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -66,6 +74,16 @@ function pushCommunityNameToCloud(uid: string, communityName: string) {
   ).catch(() => {});
 }
 
+function pushPhotoUrlToCloud(uid: string, photoUrl: string | null) {
+  setDoc(
+    userDoc(uid),
+    // Explicit null rather than omitting the key: `merge: true` ignores absent
+    // fields, so leaving it out would silently fail to remove a photo.
+    { photoUrl, updatedAt: new Date().toISOString() },
+    { merge: true },
+  ).catch(() => {});
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -88,6 +106,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             familyName: data.familyName,
             email: data.email ?? email,
             communityName: data.communityName ?? undefined,
+            photoUrl: data.photoUrl ?? undefined,
           };
           setProfile(p);
           await AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(p));
@@ -146,6 +165,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       familyName,
       email: user?.email ?? undefined,
       communityName: profile?.communityName,
+      photoUrl: profile?.photoUrl,
     };
 
     if (user) {
@@ -159,7 +179,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     setProfile(p);
-  }, [session, profile?.communityName]);
+  }, [session, profile?.communityName, profile?.photoUrl]);
 
   const saveCommunityName = useCallback(async (communityName: string) => {
     const trimmed = communityName.trim();
@@ -180,6 +200,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     pushCommunityNameToCloud(uid, trimmed);
   }, [session]);
 
+  const savePhotoUrl = useCallback(async (photoUrl: string | null) => {
+    const user = auth.currentUser ?? session;
+    const uid = user?.uid;
+    if (!uid) return;
+
+    setProfile((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, photoUrl: photoUrl ?? undefined };
+      AsyncStorage.setItem(profileCacheKey(uid), JSON.stringify(next)).catch(() => {});
+      return next;
+    });
+
+    pushPhotoUrlToCloud(uid, photoUrl);
+  }, [session]);
+
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);
     await AsyncStorage.multiRemove([
@@ -194,7 +229,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <UserContext.Provider value={{ session, profile, isLoaded, saveProfile, saveCommunityName, signOut }}>
+    <UserContext.Provider value={{ session, profile, isLoaded, saveProfile, saveCommunityName, savePhotoUrl, signOut }}>
       {children}
     </UserContext.Provider>
   );

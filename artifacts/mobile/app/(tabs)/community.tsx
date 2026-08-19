@@ -15,10 +15,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useCommunity, type PostCategory } from "@/context/CommunityContext";
 import { useUser } from "@/context/UserContext";
+import { pickImage } from "@/lib/imageUpload";
 import { PostCard } from "@/components/PostCard";
 import { ProfileButton } from "@/components/ProfileButton";
 
@@ -30,12 +32,9 @@ const CATEGORIES: { key: PostCategory | "all"; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
-const POST_CATEGORIES: { key: PostCategory; label: string; color: string }[] = [
-  { key: "recipe", label: "Recipe", color: "#E07B39" },
-  { key: "parenting", label: "Parenting", color: "#7B5EA7" },
-  { key: "health", label: "Health", color: "#2D6A4F" },
-  { key: "general", label: "General", color: "#2E86AB" },
-];
+// The composer no longer picks a category — a Cloud Function classifies each
+// post after it is written. The filter chips above still use CATEGORIES, and
+// PostCard owns the per-category colours and labels.
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -45,8 +44,10 @@ export default function CommunityScreen() {
   const [filter, setFilter] = useState<PostCategory | "all">("all");
   const [postModalVisible, setPostModalVisible] = useState(false);
   const [newContent, setNewContent] = useState("");
-  const [newCategory, setNewCategory] = useState<PostCategory>("general");
   const [communityNameInput, setCommunityNameInput] = useState("");
+  const [pickedImage, setPickedImage] = useState<string | null>(null);
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -65,18 +66,42 @@ export default function CommunityScreen() {
     setPostModalVisible(true);
   };
 
-  const canPost = !!newContent.trim() && (!needsCommunityName || !!communityNameInput.trim());
+  // A photo on its own is a perfectly good post — a recipe picture needs no
+  // caption. Only a completely empty post is rejected.
+  const hasSomethingToPost = !!newContent.trim() || !!pickedImage;
+  const canPost =
+    hasSomethingToPost && (!needsCommunityName || !!communityNameInput.trim()) && !posting;
+
+  const handleAttachImage = async () => {
+    setPostError(null);
+    try {
+      const uri = await pickImage("post");
+      if (uri) setPickedImage(uri);
+    } catch {
+      setPostError("Couldn't open your photos. Check the app's permissions.");
+    }
+  };
 
   const handlePost = async () => {
     if (!canPost) return;
-    if (needsCommunityName) {
-      await saveCommunityName(communityNameInput.trim());
+    setPosting(true);
+    setPostError(null);
+    try {
+      if (needsCommunityName) {
+        await saveCommunityName(communityNameInput.trim());
+      }
+      // Awaited, unlike before: with an image this now uploads, and closing the
+      // sheet early would hide a failure the user needs to know about.
+      await addPost(newContent.trim(), pickedImage);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setNewContent("");
+      setPickedImage(null);
+      setPostModalVisible(false);
+    } catch {
+      setPostError("Couldn't share that. Check your connection and try again.");
+    } finally {
+      setPosting(false);
     }
-    addPost(newContent.trim(), newCategory);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setNewContent("");
-    setNewCategory("general");
-    setPostModalVisible(false);
   };
 
   const confirmReport = (id: string) => {
@@ -210,24 +235,36 @@ export default function CommunityScreen() {
               testID="post-content-input"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Category</Text>
-            <View style={styles.categoryRow}>
-              {POST_CATEGORIES.map((cat) => (
+            {pickedImage ? (
+              <View style={styles.previewWrap}>
+                <Image source={{ uri: pickedImage }} style={styles.preview} contentFit="cover" />
                 <TouchableOpacity
-                  key={cat.key}
-                  style={[
-                    styles.categoryChip,
-                    { backgroundColor: newCategory === cat.key ? cat.color : colors.muted },
-                  ]}
-                  onPress={() => setNewCategory(cat.key)}
-                  testID={`category-${cat.key}`}
+                  style={styles.previewRemove}
+                  onPress={() => setPickedImage(null)}
+                  testID="remove-image-btn"
+                  accessibilityLabel="Remove photo"
                 >
-                  <Text style={[styles.categoryChipText, { color: newCategory === cat.key ? "#fff" : colors.mutedForeground }]}>
-                    {cat.label}
-                  </Text>
+                  <Feather name="x" size={16} color="#fff" />
                 </TouchableOpacity>
-              ))}
-            </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.attachBtn, { borderColor: colors.border }]}
+                onPress={handleAttachImage}
+                testID="attach-image-btn"
+              >
+                <Feather name="image" size={18} color={colors.mutedForeground} />
+                <Text style={[styles.attachText, { color: colors.mutedForeground }]}>
+                  Add a photo
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {!!postError && (
+              <Text style={[styles.errorText, { color: colors.destructive ?? "#DC2626" }]}>
+                {postError}
+              </Text>
+            )}
 
             <TouchableOpacity
               style={[styles.postBtn, { backgroundColor: colors.primary, opacity: canPost ? 1 : 0.5 }]}
@@ -235,7 +272,7 @@ export default function CommunityScreen() {
               disabled={!canPost}
               testID="submit-post-btn"
             >
-              <Text style={styles.postBtnText}>Post</Text>
+              <Text style={styles.postBtnText}>{posting ? "Sharing…" : "Post"}</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -268,9 +305,12 @@ const styles = StyleSheet.create({
   nameBlock: { marginBottom: 16 },
   nameInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14, fontFamily: "Inter_400Regular" },
   nameHint: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17, marginTop: 8 },
-  categoryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 },
-  categoryChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
-  categoryChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  attachBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed", borderRadius: 12, paddingVertical: 14, marginBottom: 16 },
+  attachText: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  previewWrap: { position: "relative", marginBottom: 16 },
+  preview: { width: "100%", aspectRatio: 4 / 3, borderRadius: 12, backgroundColor: "#00000010" },
+  previewRemove: { position: "absolute", top: 8, right: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" },
+  errorText: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 12 },
   postBtn: { padding: 14, borderRadius: 12, alignItems: "center" },
   postBtnText: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold" },
 });

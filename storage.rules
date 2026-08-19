@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Cloud Storage for pariverse-prod.
+//
+// Client-side size and type checks are advisory — a modified client can skip
+// them. These rules are the only limit that actually binds, so the caps live
+// here as well as in the UI.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // ── Profile photos ───────────────────────────────────────────────────
+    // profilePhotos/{uid}/avatar.jpg — one canonical object per user,
+    // overwritten on change so orphans never accumulate.
+    //
+    // Readable by any signed-in user because the community feed has to render
+    // them; the feed is already visible to every signed-in user, so this adds
+    // no exposure beyond what posting already implies.
+    match /profilePhotos/{uid}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+        && request.auth.uid == uid
+        && isImage()
+        && request.resource.size < 2 * 1024 * 1024;
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ── Post images ──────────────────────────────────────────────────────
+    // postImages/{postId}/image.jpg. The id is allocated client-side before
+    // the document is written, so ownership cannot be checked against an
+    // existing Firestore document here — this path is write-once-ish and the
+    // real protection is the Vision scan on upload plus the report threshold.
+    //
+    // 5MB rather than 2MB: the client resizes to 1080px/q0.7 first, and this
+    // is the backstop for a client that does not.
+    match /postImages/{postId}/{fileName} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && isImage()
+        && request.resource.size < 5 * 1024 * 1024;
+      // Updates and deletes are server-only: the onPostDeleted function cleans
+      // images up via the Admin SDK, which bypasses these rules. Letting
+      // clients overwrite would allow swapping a scanned image for an
+      // unscanned one after the fact.
+      allow update, delete: if false;
+    }
+
+    // Anything not matched above is denied by default. Keep it that way.
+  }
+}

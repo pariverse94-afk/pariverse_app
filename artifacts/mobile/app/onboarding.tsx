@@ -10,20 +10,34 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useUser } from "@/context/UserContext";
+import { auth } from "@/lib/firebase";
+import { pickImage, resize, uploadImage } from "@/lib/imageUpload";
 
 export default function OnboardingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { saveProfile } = useUser();
+  const { saveProfile, savePhotoUrl } = useUser();
   const [step, setStep] = useState<"welcome" | "profile">("welcome");
   const [yourName, setYourName] = useState("");
   const [familyName, setFamilyName] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState("");
   const familyNameRef = useRef<TextInput>(null);
+
+  const handlePickPhoto = async () => {
+    try {
+      const uri = await pickImage("avatar");
+      if (uri) setPhoto(uri);
+    } catch {
+      // Picker unavailable or permission refused. Silent: a photo is optional,
+      // so failing to choose one must never block finishing signup.
+    }
+  };
 
   const handleGetStarted = async () => {
     if (!yourName.trim() || loading) return;
@@ -34,6 +48,22 @@ export default function OnboardingScreen() {
         yourName.trim(),
         familyName.trim() || `${yourName.trim()}'s Family`,
       );
+
+      // After the profile, and never blocking it. The upload needs an
+      // authenticated uid for its Storage path, and a failed photo must not
+      // cost someone their whole signup — they can add one later from Profile.
+      if (photo) {
+        try {
+          const uid = auth.currentUser?.uid;
+          if (uid) {
+            const resized = await resize(photo, "avatar");
+            const url = await uploadImage(resized, `profilePhotos/${uid}/avatar.jpg`);
+            await savePhotoUrl(url);
+          }
+        } catch {
+          // Swallowed deliberately — see above.
+        }
+      }
       // NavigationGuard watches profile state and navigates to /(tabs) automatically
       // once saveProfile sets the profile. Keep loading=true until unmount.
     } catch (e: unknown) {
@@ -144,6 +174,37 @@ export default function OnboardingScreen() {
           testID="family-name-input"
         />
 
+        <Text style={[styles.inputLabel, { color: colors.foreground }]}>
+          Photo <Text style={[styles.optional, { color: colors.mutedForeground }]}>(optional)</Text>
+        </Text>
+        <TouchableOpacity
+          style={styles.photoRow}
+          onPress={handlePickPhoto}
+          testID="onboarding-photo-btn"
+        >
+          {photo ? (
+            <Image source={{ uri: photo }} style={styles.photoPreview} contentFit="cover" />
+          ) : (
+            <View style={[styles.photoPlaceholder, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+              <Feather name="camera" size={20} color={colors.mutedForeground} />
+            </View>
+          )}
+          <View style={styles.photoTextWrap}>
+            <Text style={[styles.photoAction, { color: colors.primary }]}>
+              {photo ? "Change photo" : "Add a photo"}
+            </Text>
+            <Text style={[styles.photoHint, { color: colors.mutedForeground }]}>
+              Shown next to your posts in Mom's Corner, which everyone using Pariverse can
+              read. Skip it and you'll get a coloured initial instead — that's perfectly normal.
+            </Text>
+          </View>
+        </TouchableOpacity>
+        {!!photo && (
+          <TouchableOpacity onPress={() => setPhoto(null)} testID="onboarding-photo-remove">
+            <Text style={[styles.photoRemove, { color: colors.mutedForeground }]}>Remove photo</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={[styles.continueBtn, { backgroundColor: colors.primary, opacity: yourName.trim() && !loading ? 1 : 0.4 }]}
           onPress={handleGetStarted}
@@ -190,6 +251,13 @@ const styles = StyleSheet.create({
   profileSubtitle: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 21, marginBottom: 32 },
   inputLabel: { fontSize: 14, fontFamily: "Inter_600SemiBold", marginBottom: 8 },
   optional: { fontFamily: "Inter_400Regular", fontSize: 12 },
+  photoRow: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 8 },
+  photoPreview: { width: 60, height: 60, borderRadius: 30, backgroundColor: "#00000010" },
+  photoPlaceholder: { width: 60, height: 60, borderRadius: 30, borderWidth: 1, borderStyle: "dashed", alignItems: "center", justifyContent: "center" },
+  photoTextWrap: { flex: 1 },
+  photoAction: { fontSize: 14, fontFamily: "Inter_600SemiBold", marginBottom: 3 },
+  photoHint: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
+  photoRemove: { fontSize: 12, fontFamily: "Inter_500Medium", marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 12, padding: 14, fontSize: 15, fontFamily: "Inter_400Regular", marginBottom: 20 },
   privacyNote: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center", marginTop: 20 },
   errorNote: { fontSize: 13, fontFamily: "Inter_500Medium", textAlign: "center", marginTop: 8 },

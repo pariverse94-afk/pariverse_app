@@ -1,8 +1,10 @@
 import * as Haptics from "expo-haptics";
 import { Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { Avatar } from "@/components/Avatar";
 import type { Post, PostCategory } from "@/context/CommunityContext";
 
 interface Props {
@@ -56,9 +58,12 @@ export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: post.authorColor }]}>
-          <Text style={styles.avatarText}>{post.authorName.charAt(0).toUpperCase()}</Text>
-        </View>
+        <Avatar
+          name={post.authorName}
+          color={post.authorColor}
+          photoUrl={post.authorPhotoUrl}
+          size={40}
+        />
         <View style={styles.authorInfo}>
           <Text style={[styles.authorName, { color: colors.foreground }]}>{post.authorName}</Text>
           <Text style={[styles.time, { color: colors.mutedForeground }]}>{timeAgo(post.createdAt)}</Text>
@@ -70,7 +75,20 @@ export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
         </View>
       </View>
 
-      <Text style={[styles.content, { color: colors.foreground }]}>{post.content}</Text>
+      {!!post.content && (
+        <Text style={[styles.content, { color: colors.foreground }]}>{post.content}</Text>
+      )}
+
+      {!!post.imageUrl && (
+        <Image
+          source={{ uri: post.imageUrl }}
+          style={styles.postImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+          accessibilityLabel="Photo attached to this post"
+        />
+      )}
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionBtn} onPress={handleLike} testID={`like-${post.id}`}>
@@ -124,17 +142,12 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 10,
   },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "#fff",
-    fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
+  postImage: {
+    width: "100%",
+    aspectRatio: 4 / 3,
+    borderRadius: 12,
+    marginTop: 10,
+    backgroundColor: "#00000010",
   },
   authorInfo: {
     flex: 1,

@@ -47,6 +47,14 @@ export const postsCollection = () => collection(db, "communityPosts");
 export const postDoc = (id: string) => doc(db, "communityPosts", id);
 
 /**
+ * Allocates a post id without writing anything, so an image can be uploaded to
+ * `postImages/{id}/` before the document exists. Avoids the alternative —
+ * writing the post, then patching in the URL — which shows every reader a post
+ * with a missing image for as long as the upload takes.
+ */
+export const newPostDoc = () => doc(postsCollection());
+
+/**
  * communityPosts/{postId}/likes/{uid} — one document per user per post, so a
  * like is a fact on the server rather than a number the client asserts. The
  * document id being the uid is what makes a second like impossible: re-liking
