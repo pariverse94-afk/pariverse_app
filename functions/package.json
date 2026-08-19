@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@google-cloud/vision": "^6.0.0",
     "firebase-admin": "^13.6.0",
     "firebase-functions": "^6.6.0"
   },

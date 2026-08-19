@@ -6,6 +6,18 @@ import { logger } from "firebase-functions";
 initializeApp();
 const db = getFirestore();
 
+// Re-exported so Firebase discovers them as separate deployable functions.
+//
+// ES module re-exports are hoisted, so these evaluate *before* the
+// initializeApp() call above no matter where the line sits. That is only safe
+// because each of these modules calls getFirestore()/getStorage() inside its
+// handler rather than at module scope. Keep it that way: moving an Admin SDK
+// call to the top level of any of them breaks initialisation in a way that only
+// shows up at deploy time, as a discovery failure with no useful stack.
+export { onImageUploaded } from "./moderateImages.js";
+export { onPostDeleted } from "./cleanupPostImages.js";
+export { onPostCreatedClassify } from "./classifyPost.js";
+
 /**
  * How many *distinct* accounts must report a post before it is hidden.
  *

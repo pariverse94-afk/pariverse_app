@@ -37,11 +37,21 @@ service cloud.firestore {
 
       // Anyone signed in can post as themselves; posts start with 0 likes
       // and are capped at 2000 characters.
+      // A photo with no caption is a natural post — a recipe picture often
+      // speaks for itself — so content may be empty as long as an image is
+      // attached. A post with neither is still rejected.
       allow create: if signedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.content is string
-        && request.resource.data.content.size() > 0
         && request.resource.data.content.size() <= 2000
+        && (
+          request.resource.data.content.size() > 0
+          || (
+            request.resource.data.keys().hasAny(['imageUrl'])
+            && request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() > 0
+          )
+        )
         && request.resource.data.likeCount == 0;
 
       // Only the author can delete their post.
