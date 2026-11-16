@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -288,6 +289,26 @@ export default function LoginScreen() {
             ? "New to Pariverse? Switch to Create Account above."
             : "Already have an account? Switch to Sign In above."}
         </Text>
+
+        <Text style={[styles.legalNote, { color: colors.mutedForeground }]}>
+          By continuing, you agree to our{" "}
+          <Text
+            style={[styles.legalLink, { color: colors.primary }]}
+            onPress={() => router.push({ pathname: "/legal", params: { tab: "Terms of Service" } })}
+            testID="login-terms-link"
+          >
+            Terms of Service
+          </Text>{" "}
+          and{" "}
+          <Text
+            style={[styles.legalLink, { color: colors.primary }]}
+            onPress={() => router.push({ pathname: "/legal", params: { tab: "Privacy Policy" } })}
+            testID="login-privacy-link"
+          >
+            Privacy Policy
+          </Text>
+          .
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -394,4 +415,6 @@ const styles = StyleSheet.create({
   },
   submitBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_600SemiBold" },
   footerNote: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center" },
+  legalNote: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center", lineHeight: 18, marginTop: 16 },
+  legalLink: { fontFamily: "Inter_600SemiBold", textDecorationLine: "underline" },
 });

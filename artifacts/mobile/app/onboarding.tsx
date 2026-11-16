@@ -220,7 +220,7 @@ export default function OnboardingScreen() {
         ) : null}
 
         <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-          Your data is securely stored and synced via Supabase
+          Your data is stored with Google Firebase and synced across your devices
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>
