@@ -1,7 +1,11 @@
 # Pariverse — agent working notes
 
-Family app for urban India. **Expo mobile app only — there is no server tier.** Shipping on
-Google Play (package `com.pariverse.app`, currently in **closed testing**).
+Family app for urban India: an Expo mobile app plus a few Firebase Cloud Functions for
+community moderation. There is no API of our own. Package `com.pariverse.app` on Google Play:
+closed testing passed, but the **production submission was rejected on disclosure policy**
+(2026-11). Read
+[`.agents/memory/handoff-2026-11-16-play-rejection.md`](.agents/memory/handoff-2026-11-16-play-rejection.md)
+first — it has the current state and the open items.
 
 Product/feature detail lives in [replit.md](replit.md) — read it for what the app *does*.
 This file is for how to *work on* it.
@@ -13,6 +17,8 @@ This file is for how to *work on* it.
 | `artifacts/mobile` | Expo SDK 54 app, expo-router v6 — **the Play Store artifact** |
 | `artifacts/mockup-sandbox` | Vite design sandbox, not shipped |
 | `hosting/` | Firebase Hosting — serves the **Play-required account-deletion page** |
+| `functions/` | Cloud Functions (Node 22, `asia-south1`) — image SafeSearch scan, post-image cleanup, post classification via Groq, auto-hide on reports |
+| `firestore.rules`, `storage.rules` | The access-control layer for Firestore and uploaded images |
 | `scripts` | Misc workspace tooling |
 | `.agents/memory/` | **Hard-won debugging knowledge — read before touching build/auth/sync** |
 
@@ -33,8 +39,10 @@ those areas, and add a note when you solve a new one.
 
 ## Architecture in one line
 
-Expo app → Firebase Auth + Cloud Firestore (direct, local-first) and → Groq (direct).
-Nothing else. No API of our own.
+Expo app → Firebase Auth + Cloud Firestore (direct, local-first) + Firebase Storage (profile
+and post images) and → Groq (direct, for meals and first aid). Cloud Functions react to
+Firestore and Storage events: Cloud Vision SafeSearch on uploads, Groq for post categories.
+The app never calls a function directly. No API of our own.
 
 ## Blast radius — check before you act
 
@@ -43,7 +51,8 @@ frozen. Runtime services can, immediately and with no review:
 
 | Reaches live users at once | Cannot affect them |
 |---|---|
-| Deploying Firestore rules | Any source/config/doc edit |
+| Deploying Firestore or Storage rules | Any source/config/doc edit |
+| Deploying Cloud Functions | |
 | Revoking/rotating the Groq key | `.env.local`, `package.json`, lockfile |
 | Firestore data-shape changes | `eas.json` (shapes *future* builds only) |
 | Firebase Auth / API-key config | |
@@ -81,10 +90,10 @@ pnpm --filter @workspace/mobile typecheck
 pnpm exec expo export --platform android   # proves Metro still resolves
 ```
 
-The mobile `dev` script is written for Replit (`$REPLIT_DEV_DOMAIN`, `$PORT`) and will not
-run as-is on Windows. For local dev use `pnpm exec expo start` from `artifacts/mobile` with
-the `EXPO_PUBLIC_FIREBASE_*` vars supplied via `.env.local` (see the Firebase RN auth init
-entry in `MEMORY.md`).
+For local dev the quick loop is the web target: `pnpm --filter @workspace/mobile dev:web`.
+`dev` needs an installed development build. Both need the `EXPO_PUBLIC_FIREBASE_*` vars in
+`artifacts/mobile/.env.local`, which is gitignored — copy the values from the `env` block in
+`eas.json` (see the Firebase RN auth init entry in `MEMORY.md`).
 
 ## Release path (Play Store)
 

@@ -1,3 +1,4 @@
+- [Handoff 2026-11-16 — Play rejection + new PC](handoff-2026-11-16-play-rejection.md) — **start here.** Production submission rejected on disclosure policy; likely cause, what is fixed, what is still open, and what git does not carry between machines.
 - [Metro _tmp_ blockList](metro-tmp-blocklist.md) — Metro ENOENT crashes on pnpm packages that create then delete _tmp_N dirs during install; must block them in metro.config.js.
 - [API tier removal](api-tier-removal.md) — the Express/Cloud Run/Postgres tier and both Anthropic libs were deleted 2026-08-11; they had been dead since 2026-07-22. Read before "restoring" any backend.
 - [Drizzle duplicate instance via OpenTelemetry](drizzle-otel-dedup.md) — **OBSOLETE** (drizzle + firebase-admin both removed with the API tier); kept only in case a server tier returns.
