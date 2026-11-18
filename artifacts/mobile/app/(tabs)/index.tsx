@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   Alert,
@@ -20,6 +21,14 @@ import { useFamily, type Chore } from "@/context/FamilyContext";
 import { useUser } from "@/context/UserContext";
 import { ChoreCard } from "@/components/ChoreCard";
 import { ProfileButton } from "@/components/ProfileButton";
+
+const CHORE_CATEGORIES: { key: Chore["category"]; label: string }[] = [
+  { key: "cleaning", label: "Cleaning" },
+  { key: "cooking", label: "Cooking" },
+  { key: "shopping", label: "Shopping" },
+  { key: "childcare", label: "Childcare" },
+  { key: "other", label: "Other" },
+];
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -50,8 +59,24 @@ export default function HomeScreen() {
   const completedCount = useMemo(() => chores.filter((c) => c.completed).length, [chores]);
   const progress = chores.length > 0 ? completedCount / chores.length : 0;
 
+  const goAddFamily = () => router.push("/(tabs)/profile");
+
+  // members load asynchronously, so the initial selection can be empty or stale.
+  const openAddChore = () => {
+    if (members.length === 0) {
+      Alert.alert("Add your family first", "Chores are assigned to family members. Add someone in Profile.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Add family", onPress: goAddFamily },
+      ]);
+      return;
+    }
+    if (!members.some((m) => m.id === selectedMemberId)) setSelectedMemberId(members[0].id);
+    setSelectedCategory("other");
+    setAddModalVisible(true);
+  };
+
   const handleAddChore = () => {
-    if (!newChoreTitle.trim()) return;
+    if (!newChoreTitle.trim() || !members.some((m) => m.id === selectedMemberId)) return;
     addChore({
       title: newChoreTitle.trim(),
       assignedTo: selectedMemberId,
@@ -97,7 +122,7 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[styles.addBtn, { backgroundColor: colors.primary }]}
-              onPress={() => setAddModalVisible(true)}
+              onPress={openAddChore}
               testID="add-chore-btn"
             >
               <Feather name="plus" size={20} color="#fff" />
@@ -108,6 +133,19 @@ export default function HomeScreen() {
 
         {/* Family Members */}
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Family</Text>
+        {members.length === 0 && (
+          <TouchableOpacity
+            style={[styles.emptyFamily, { backgroundColor: colors.muted, borderColor: colors.border }]}
+            onPress={goAddFamily}
+            testID="add-family-cta"
+          >
+            <Feather name="user-plus" size={20} color={colors.primary} />
+            <Text style={[styles.emptyFamilyText, { color: colors.foreground }]}>
+              Add your family members to start sharing chores
+            </Text>
+            <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.membersRow}>
           {members.map((m) => {
             const memberChores = chores.filter((c) => c.assignedTo === m.id);
@@ -215,6 +253,25 @@ export default function HomeScreen() {
               ))}
             </ScrollView>
 
+            <Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.memberPicker}>
+              {CHORE_CATEGORIES.map((c) => (
+                <TouchableOpacity
+                  key={c.key}
+                  style={[
+                    styles.memberPickerItem,
+                    { backgroundColor: selectedCategory === c.key ? colors.secondary : colors.muted },
+                  ]}
+                  onPress={() => setSelectedCategory(c.key)}
+                  testID={`chore-category-${c.key}`}
+                >
+                  <Text style={[styles.memberPickerText, { color: selectedCategory === c.key ? "#fff" : colors.mutedForeground }]}>
+                    {c.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: colors.primary, opacity: newChoreTitle.trim() ? 1 : 0.5 }]}
               onPress={handleAddChore}
@@ -231,6 +288,16 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  emptyFamily: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 20,
+  },
+  emptyFamilyText: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium" },
   screen: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20 },

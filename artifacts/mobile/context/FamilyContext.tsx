@@ -44,19 +44,13 @@ const STORAGE_KEYS = {
   chores: "parivaar_chores_v2",
 };
 
-const DEFAULT_MEMBERS: FamilyMember[] = [
-  { id: "m1", name: "Priya", role: "parent", color: "#E07B39" },
-  { id: "m2", name: "Rahul", role: "parent", color: "#2D6A4F" },
-  { id: "m3", name: "Aryan", role: "child", color: "#7B5EA7" },
-];
+// New accounts start empty. These used to be a sample family (Priya, Rahul,
+// Aryan + five chores) that was then uploaded to every new user's cloud data as
+// if it were real. Existing accounts are unaffected: their data loads from
+// Firestore / the local cache, never from these defaults.
+const DEFAULT_MEMBERS: FamilyMember[] = [];
 
-const DEFAULT_CHORES: Chore[] = [
-  { id: "c1", title: "Make breakfast", assignedTo: "m1", completed: false, category: "cooking", recurring: "daily", createdAt: new Date().toISOString() },
-  { id: "c2", title: "School drop-off", assignedTo: "m2", completed: false, category: "childcare", recurring: "daily", createdAt: new Date().toISOString() },
-  { id: "c3", title: "Tidy bedroom", assignedTo: "m3", completed: true, category: "cleaning", recurring: "daily", createdAt: new Date().toISOString() },
-  { id: "c4", title: "Grocery run", assignedTo: "m1", completed: false, category: "shopping", recurring: "weekly", createdAt: new Date().toISOString() },
-  { id: "c5", title: "Dishes after dinner", assignedTo: "m2", completed: false, category: "cooking", recurring: "daily", createdAt: new Date().toISOString() },
-];
+const DEFAULT_CHORES: Chore[] = [];
 
 function generateId() {
   return `local_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;

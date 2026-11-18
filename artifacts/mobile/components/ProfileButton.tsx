@@ -132,7 +132,7 @@ export function ProfileButton() {
                 )}
                 {!!profile?.familyName && (
                   <Text style={[styles.profileFamily, { color: colors.mutedForeground }]}>
-                    {profile.familyName} family
+                    {profile.familyName}
                   </Text>
                 )}
               </View>

@@ -162,6 +162,11 @@ export default function ProfileScreen() {
 
   const handleSaveInvite = async () => {
     if (!inviteMember || !inviteEmail.trim()) return;
+    const ownEmail = (session?.email ?? profile?.email ?? "").trim().toLowerCase();
+    if (ownEmail && inviteEmail.trim().toLowerCase() === ownEmail) {
+      Alert.alert("That's your email", `Enter ${inviteMember.name}'s own email address.`);
+      return;
+    }
     setInviteChecking(true);
     await updateMemberEmail(inviteMember.id, inviteEmail.trim());
     setInviteChecking(false);
