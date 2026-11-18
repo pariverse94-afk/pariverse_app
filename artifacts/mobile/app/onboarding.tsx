@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useUser } from "@/context/UserContext";
 import { auth } from "@/lib/firebase";
+import { PHOTOS_ENABLED } from "@/lib/features";
 import { pickImage, resize, uploadImage } from "@/lib/imageUpload";
 
 export default function OnboardingScreen() {
@@ -174,6 +175,7 @@ export default function OnboardingScreen() {
           testID="family-name-input"
         />
 
+        {PHOTOS_ENABLED && (<>
         <Text style={[styles.inputLabel, { color: colors.foreground }]}>
           Photo <Text style={[styles.optional, { color: colors.mutedForeground }]}>(optional)</Text>
         </Text>
@@ -204,6 +206,7 @@ export default function OnboardingScreen() {
             <Text style={[styles.photoRemove, { color: colors.mutedForeground }]}>Remove photo</Text>
           </TouchableOpacity>
         )}
+        </>)}
 
         <TouchableOpacity
           style={[styles.continueBtn, { backgroundColor: colors.primary, opacity: yourName.trim() && !loading ? 1 : 0.4 }]}

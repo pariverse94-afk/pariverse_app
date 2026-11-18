@@ -74,7 +74,7 @@ interface CommunityContextValue {
    * after the write. Rejects (rather than swallowing) upload failures so the
    * composer can tell the user their photo did not go up.
    */
-  addPost: (content: string, localImageUri?: string | null) => Promise<void>;
+  addPost: (content: string, localImageUri?: string | null, category?: PostCategory) => Promise<void>;
   likePost: (id: string) => Promise<void>;
   savePost: (id: string) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -272,7 +272,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     [rawPosts, me, uid],
   );
 
-  const addPost = useCallback(async (content: string, localImageUri?: string | null) => {
+  const addPost = useCallback(async (content: string, localImageUri?: string | null, category: PostCategory = "general") => {
     if (!uid) return;
     const color = OWN_COLORS[Math.floor(Math.random() * OWN_COLORS.length)];
     // Byline is the community name, never the real profile name — posts are
@@ -293,8 +293,8 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
       imageUrl = await uploadImage(resized, `postImages/${ref.id}/image.jpg`);
     }
 
-    // Category is assigned server-side by the classifier; "general" is what the
-    // feed shows for the second or two before that lands.
+    // The author's choice while AUTO_CATEGORY_ENABLED is off (lib/features.ts).
+    // With the classifier deployed, "general" is shown until it relabels.
     await setDoc(ref, {
       authorId: uid,
       authorName,
@@ -302,7 +302,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
       ...(profile?.photoUrl ? { authorPhotoUrl: profile.photoUrl } : {}),
       content,
       ...(imageUrl ? { imageUrl } : {}),
-      category: "general" as PostCategory,
+      category,
       likeCount: 0,
       createdAt: new Date().toISOString(),
     });

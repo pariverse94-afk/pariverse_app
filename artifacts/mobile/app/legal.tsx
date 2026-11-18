@@ -28,10 +28,10 @@ Pariverse is for adults aged 18 and over. Children do not have accounts; a paren
 
       <Section title="Information we collect">
         {`• Account: your name, family name and email address, from email sign-up or Google Sign-In.
-• Community profile: the public name you choose for Mom's Corner and, if you add one, a profile photo.
+• Community profile: the public name you choose for Mom's Corner.
 • Family data: names and roles of family members you add, chores and who they are assigned to, and email addresses you enter to invite family members.
 • Meal data: your meal plan, pantry items, dietary preferences and nutritional goals.
-• Community content: posts you write, photos you attach, posts you like or save, people you block and posts you report.
+• Community content: posts you write and their category, posts you like or save, people you block and posts you report.
 • First-aid questions: the condition, your child's age, how severe it seems and any details you type. These are sent to our AI provider to generate an answer and are not saved by us.
 • Reports of AI answers: if you report an AI answer, we keep a copy of that answer and what was asked so we can review it.
 We do not use analytics or advertising SDKs, do not collect your location, contacts or device identifiers for tracking, and do not run crash reporting.`}
@@ -39,23 +39,20 @@ We do not use analytics or advertising SDKs, do not collect your location, conta
 
       <Section title="Who can see what">
         {`• Your family data, meal data, saved posts and blocked list are private to your account.
-• Mom's Corner is one shared feed. Your posts, attached photos, community name, profile photo and likes are visible to every signed-in Pariverse user. Do not post anything you would not want other members to see.
+• Mom's Corner is one shared feed. Your posts, community name and likes are visible to every signed-in Pariverse user. Do not post anything you would not want other members to see.
 • If you enter a family member's email address, we check whether that address belongs to a Pariverse account so we can show them as "On Pariverse". We do not email them.`}
       </Section>
 
       <Section title="How we use your information">
         {`• To run the app and sync your data across your devices.
 • To generate meal suggestions and first-aid guidance with AI.
-• To label community posts with a category (recipe, parenting, health, general) using AI.
-• To check uploaded photos for explicit or violent content before they are shown to others.
-• To review reported posts and AI answers, and to hide posts that several members report.`}
+• To review reported posts and AI answers and remove content that breaks our community rules.`}
       </Section>
 
       <Section title="Service providers">
         {`We do not sell, rent or trade your personal information, and we do not share it for advertising. Your data is processed only by these providers, for the purposes above:
-• Google Firebase — sign-in (Firebase Authentication), data storage (Cloud Firestore), photo storage (Cloud Storage for Firebase), server functions (Cloud Functions) and web hosting.
-• Google Cloud Vision — SafeSearch scanning of uploaded photos.
-• Groq — AI processing of meal requests, first-aid questions and community post text. Requests are sent to Groq to produce a response and are subject to Groq's own privacy policy.
+• Google Firebase — sign-in (Firebase Authentication), data storage (Cloud Firestore) and web hosting.
+• Groq — AI processing of meal requests and first-aid questions. Requests are sent to Groq to produce a response and are subject to Groq's own privacy policy.
 • Google Sign-In — only if you choose to sign in with Google.`}
       </Section>
 
@@ -68,7 +65,7 @@ We do not use analytics or advertising SDKs, do not collect your location, conta
       </Section>
 
       <Section title="Deleting your account and data">
-        {`You can request deletion from the app (Profile → Delete Account) or at https://pariverse-prod.web.app/delete-account, or by emailing pariverse94@gmail.com with the subject "Pariverse Account Deletion Request". We will delete your account, profile, profile photo, family, chore and meal data, community posts and their photos within 30 days and confirm by email.`}
+        {`You can request deletion from the app (Profile → Delete Account) or at https://pariverse-prod.web.app/delete-account, or by emailing pariverse94@gmail.com with the subject "Pariverse Account Deletion Request". We will delete your account, profile, family, chore and meal data and community posts within 30 days and confirm by email.`}
       </Section>
 
       <Section title="Children">

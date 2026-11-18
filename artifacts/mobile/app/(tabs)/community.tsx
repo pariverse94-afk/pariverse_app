@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useCommunity, type PostCategory } from "@/context/CommunityContext";
 import { useUser } from "@/context/UserContext";
+import { AUTO_CATEGORY_ENABLED, PHOTOS_ENABLED } from "@/lib/features";
 import { pickImage } from "@/lib/imageUpload";
 import { PostCard } from "@/components/PostCard";
 import { ProfileButton } from "@/components/ProfileButton";
@@ -32,9 +33,14 @@ const CATEGORIES: { key: PostCategory | "all"; label: string }[] = [
   { key: "general", label: "General" },
 ];
 
-// The composer no longer picks a category — a Cloud Function classifies each
-// post after it is written. The filter chips above still use CATEGORIES, and
-// PostCard owns the per-category colours and labels.
+// While AUTO_CATEGORY_ENABLED is off the author picks one (lib/features.ts);
+// with it on, a Cloud Function classifies each post after it is written.
+const POST_CATEGORIES: { key: PostCategory; label: string; color: string }[] = [
+  { key: "recipe", label: "Recipe", color: "#E07B39" },
+  { key: "parenting", label: "Parenting", color: "#7B5EA7" },
+  { key: "health", label: "Health", color: "#2D6A4F" },
+  { key: "general", label: "General", color: "#2E86AB" },
+];
 
 export default function CommunityScreen() {
   const colors = useColors();
@@ -47,6 +53,7 @@ export default function CommunityScreen() {
   const [newContent, setNewContent] = useState("");
   const [communityNameInput, setCommunityNameInput] = useState("");
   const [pickedImage, setPickedImage] = useState<string | null>(null);
+  const [newCategory, setNewCategory] = useState<PostCategory>("general");
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
 
@@ -93,10 +100,11 @@ export default function CommunityScreen() {
       }
       // Awaited, unlike before: with an image this now uploads, and closing the
       // sheet early would hide a failure the user needs to know about.
-      await addPost(newContent.trim(), pickedImage);
+      await addPost(newContent.trim(), pickedImage, AUTO_CATEGORY_ENABLED ? "general" : newCategory);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setNewContent("");
       setPickedImage(null);
+      setNewCategory("general");
       setPostModalVisible(false);
     } catch {
       setPostError("Couldn't share that. Check your connection and try again.");
@@ -285,7 +293,27 @@ export default function CommunityScreen() {
               testID="post-content-input"
             />
 
-            {pickedImage ? (
+            {!AUTO_CATEGORY_ENABLED && (
+              <>
+                <Text style={[styles.categoryLabel, { color: colors.mutedForeground }]}>Category</Text>
+                <View style={styles.categoryRow}>
+                  {POST_CATEGORIES.map((cat) => (
+                    <TouchableOpacity
+                      key={cat.key}
+                      style={[styles.categoryChip, { backgroundColor: newCategory === cat.key ? cat.color : colors.muted }]}
+                      onPress={() => setNewCategory(cat.key)}
+                      testID={`category-${cat.key}`}
+                    >
+                      <Text style={[styles.categoryChipText, { color: newCategory === cat.key ? "#fff" : colors.mutedForeground }]}>
+                        {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
+
+            {!PHOTOS_ENABLED ? null : pickedImage ? (
               <View style={styles.previewWrap}>
                 <Image source={{ uri: pickedImage }} style={styles.preview} contentFit="cover" />
                 <TouchableOpacity
@@ -357,6 +385,10 @@ const styles = StyleSheet.create({
   nameBlock: { marginBottom: 16 },
   nameInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 14, fontFamily: "Inter_400Regular" },
   nameHint: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17, marginTop: 8 },
+  categoryLabel: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 12, marginBottom: 8 },
+  categoryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
+  categoryChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  categoryChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   attachBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderStyle: "dashed", borderRadius: 12, paddingVertical: 14, marginBottom: 16 },
   attachText: { fontSize: 14, fontFamily: "Inter_500Medium" },
   previewWrap: { position: "relative", marginBottom: 16 },
