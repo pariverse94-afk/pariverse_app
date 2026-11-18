@@ -34,6 +34,8 @@ export interface Post {
   saved: boolean;
   createdAt: string;
   isOwn?: boolean;
+  /** Built-in starter post, not written by a real member. Shown with a "Sample" badge. */
+  isSample?: boolean;
 }
 
 /** Shape stored in the shared communityPosts collection. */
@@ -60,6 +62,8 @@ interface MeState {
   liked: Set<string>;
   saved: Set<string>;
   hidden: Set<string>;
+  /** Author uids this user has blocked — their posts are dropped from the feed. */
+  blocked: Set<string>;
 }
 
 interface CommunityContextValue {
@@ -76,6 +80,10 @@ interface CommunityContextValue {
   deletePost: (id: string) => Promise<void>;
   /** Report a post as inappropriate and hide it from this user's feed. */
   reportPost: (id: string) => Promise<void>;
+  /** Stop showing any post by this author, on all of this user's devices. */
+  blockAuthor: (authorId: string) => Promise<void>;
+  unblockAll: () => Promise<void>;
+  blockedCount: number;
 }
 
 const SEEDS: Array<Omit<StoredPost, "authorId" | "createdAt" | "likeCount"> & { hoursAgo: number }> = [
@@ -90,13 +98,19 @@ const SEEDS: Array<Omit<StoredPost, "authorId" | "createdAt" | "likeCount"> & { 
 const POSTS_CACHE_KEY = "parivaar_community_v3";
 const ME_CACHE_KEY = "parivaar_community_me_v1";
 const OWN_COLORS = ["#C44B2B", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"];
-const EMPTY_ME: MeState = { liked: new Set(), saved: new Set(), hidden: new Set() };
+const EMPTY_ME: MeState = { liked: new Set(), saved: new Set(), hidden: new Set(), blocked: new Set() };
 
-function meFromArrays(d: { likedPostIds?: string[]; savedPostIds?: string[]; hiddenPostIds?: string[] }): MeState {
+function meFromArrays(d: {
+  likedPostIds?: string[];
+  savedPostIds?: string[];
+  hiddenPostIds?: string[];
+  blockedAuthorIds?: string[];
+}): MeState {
   return {
     liked: new Set(d.likedPostIds ?? []),
     saved: new Set(d.savedPostIds ?? []),
     hidden: new Set(d.hiddenPostIds ?? []),
+    blocked: new Set(d.blockedAuthorIds ?? []),
   };
 }
 
@@ -105,6 +119,7 @@ function meToArrays(me: MeState) {
     likedPostIds: [...me.liked],
     savedPostIds: [...me.saved],
     hiddenPostIds: [...me.hidden],
+    blockedAuthorIds: [...me.blocked],
   };
 }
 
@@ -235,6 +250,9 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
         // lack the field, and no existing post has it — so querying would blank
         // the entire feed rather than filter it.
         .filter((p) => p.hidden !== true && !me.hidden.has(p.id))
+        // Blocked authors. Samples are never filtered this way: their authorId
+        // is whichever account happened to seed the feed, not a real author.
+        .filter((p) => p.isSeed || !p.authorId || !me.blocked.has(p.authorId))
         .map((p) => ({
           id: p.id,
           authorId: p.authorId,
@@ -249,6 +267,7 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
           saved: me.saved.has(p.id),
           createdAt: p.createdAt,
           isOwn: !!uid && p.authorId === uid && !p.isSeed,
+          isSample: !!p.isSeed,
         })),
     [rawPosts, me, uid],
   );
@@ -334,6 +353,19 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  const blockAuthor = useCallback(async (authorId: string) => {
+    if (!uid || authorId === uid) return;
+    const cur = meRef.current;
+    const blocked = new Set(cur.blocked);
+    blocked.add(authorId);
+    persistMe({ ...cur, blocked });
+  }, [uid, persistMe]);
+
+  const unblockAll = useCallback(async () => {
+    const cur = meRef.current;
+    persistMe({ ...cur, blocked: new Set() });
+  }, [persistMe]);
+
   const reportPost = useCallback(async (id: string) => {
     if (!uid) return;
     const post = rawPosts.find((p) => p.id === id);
@@ -357,7 +389,12 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   }, [uid, rawPosts, persistMe]);
 
   return (
-    <CommunityContext.Provider value={{ posts, loading, addPost, likePost, savePost, deletePost, reportPost }}>
+    <CommunityContext.Provider
+      value={{
+        posts, loading, addPost, likePost, savePost, deletePost, reportPost,
+        blockAuthor, unblockAll, blockedCount: me.blocked.size,
+      }}
+    >
       {children}
     </CommunityContext.Provider>
   );

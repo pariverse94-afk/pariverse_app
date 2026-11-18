@@ -39,7 +39,8 @@ const CATEGORIES: { key: PostCategory | "all"; label: string }[] = [
 export default function CommunityScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { posts, addPost, likePost, savePost, deletePost, reportPost } = useCommunity();
+  const { posts, addPost, likePost, savePost, deletePost, reportPost, blockAuthor, unblockAll, blockedCount } =
+    useCommunity();
   const { profile, saveCommunityName } = useUser();
   const [filter, setFilter] = useState<PostCategory | "all">("all");
   const [postModalVisible, setPostModalVisible] = useState(false);
@@ -103,6 +104,41 @@ export default function CommunityScreen() {
       setPosting(false);
     }
   };
+
+  /** Cross-platform confirm: window.confirm on web, a native alert elsewhere. */
+  const confirmAction = (title: string, message: string, actionLabel: string, onConfirm: () => void) => {
+    if (Platform.OS === "web") {
+      // eslint-disable-next-line no-alert
+      if (window.confirm(message)) onConfirm();
+      return;
+    }
+    Alert.alert(title, message, [
+      { text: "Cancel", style: "cancel" },
+      { text: actionLabel, style: "destructive", onPress: onConfirm },
+    ]);
+  };
+
+  const confirmDelete = (id: string) =>
+    confirmAction("Delete post", "Delete your post? This can't be undone.", "Delete", () => deletePost(id));
+
+  const confirmBlock = (authorId: string, name: string) =>
+    confirmAction(
+      `Block ${name}?`,
+      `You won't see posts from ${name} any more. They won't be told. You can unblock from the bottom of the feed.`,
+      "Block",
+      () => {
+        void blockAuthor(authorId);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      },
+    );
+
+  const confirmUnblock = () =>
+    confirmAction(
+      "Unblock everyone",
+      `Show posts from the ${blockedCount} ${blockedCount === 1 ? "person" : "people"} you blocked again?`,
+      "Unblock",
+      () => void unblockAll(),
+    );
 
   const confirmReport = (id: string) => {
     const message =
@@ -173,10 +209,24 @@ export default function CommunityScreen() {
               post={item}
               onLike={() => likePost(item.id)}
               onSave={() => savePost(item.id)}
-              onDelete={item.isOwn ? () => deletePost(item.id) : undefined}
+              onDelete={item.isOwn ? () => confirmDelete(item.id) : undefined}
               onReport={!item.isOwn ? () => confirmReport(item.id) : undefined}
+              onBlock={
+                !item.isOwn && !item.isSample && item.authorId
+                  ? () => confirmBlock(item.authorId!, item.authorName)
+                  : undefined
+              }
             />
           )}
+          ListFooterComponent={
+            blockedCount > 0 ? (
+              <TouchableOpacity onPress={confirmUnblock} style={styles.blockedFooter} testID="unblock-all">
+                <Text style={[styles.blockedFooterText, { color: colors.mutedForeground }]}>
+                  {blockedCount} blocked · <Text style={{ color: colors.primary }}>Unblock</Text>
+                </Text>
+              </TouchableOpacity>
+            ) : null
+          }
           contentContainerStyle={[styles.listContent, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 90 }]}
           showsVerticalScrollIndicator={false}
           scrollEnabled={filteredPosts.length > 0}
@@ -290,6 +340,8 @@ const styles = StyleSheet.create({
   filterRow: { marginBottom: 12 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, marginRight: 8 },
   filterChipText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  blockedFooter: { alignItems: "center", paddingVertical: 16 },
+  blockedFooterText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   listContent: { paddingHorizontal: 16, paddingTop: 4 },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
   emptyText: { fontSize: 16, fontFamily: "Inter_500Medium" },

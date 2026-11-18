@@ -13,6 +13,7 @@ interface Props {
   onSave: () => void;
   onDelete?: () => void;
   onReport?: () => void;
+  onBlock?: () => void;
 }
 
 const CATEGORY_COLORS: Record<PostCategory, string> = {
@@ -41,7 +42,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
-export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
+export function PostCard({ post, onLike, onSave, onDelete, onReport, onBlock }: Props) {
   const colors = useColors();
   const catColor = CATEGORY_COLORS[post.category];
 
@@ -59,14 +60,24 @@ export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
     <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.header}>
         <Avatar
-          name={post.authorName}
-          color={post.authorColor}
+          name={post.isSample ? "Pariverse" : post.authorName}
+          color={post.isSample ? colors.primary : post.authorColor}
           photoUrl={post.authorPhotoUrl}
           size={40}
         />
         <View style={styles.authorInfo}>
-          <Text style={[styles.authorName, { color: colors.foreground }]}>{post.authorName}</Text>
-          <Text style={[styles.time, { color: colors.mutedForeground }]}>{timeAgo(post.createdAt)}</Text>
+          <Text style={[styles.authorName, { color: colors.foreground }]}>
+            {post.isSample ? "Pariverse team" : post.authorName}
+          </Text>
+          {post.isSample ? (
+            // Starter posts were written by the team, not members. Saying so
+            // keeps the feed honest about who is giving parenting/health tips.
+            <Text style={[styles.time, { color: colors.mutedForeground }]}>
+              Sample post · tips are general, not medical advice
+            </Text>
+          ) : (
+            <Text style={[styles.time, { color: colors.mutedForeground }]}>{timeAgo(post.createdAt)}</Text>
+          )}
         </View>
         <View style={[styles.categoryBadge, { backgroundColor: catColor + "20" }]}>
           <Text style={[styles.categoryText, { color: catColor }]}>
@@ -112,6 +123,17 @@ export function PostCard({ post, onLike, onSave, onDelete, onReport }: Props) {
         </TouchableOpacity>
 
         <View style={styles.actionSpacer} />
+
+        {onBlock && (
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={onBlock}
+            testID={`block-${post.id}`}
+            accessibilityLabel={`Block ${post.authorName}`}
+          >
+            <Feather name="user-x" size={16} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
 
         {onReport && (
           <TouchableOpacity style={styles.actionBtn} onPress={onReport} testID={`report-${post.id}`}>
