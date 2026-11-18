@@ -12,7 +12,6 @@ A mobile app built with Expo for nuclear families in urban India.
 **Monorepo (pnpm workspaces)**
 
 - `artifacts/mobile` — Expo (SDK 54, expo-router v6) mobile app — the Play Store artifact
-- `artifacts/mockup-sandbox` — Vite design sandbox, not shipped
 - `hosting/` — Firebase Hosting; serves the Play-required account-deletion page
 - `scripts` — misc workspace tooling
 

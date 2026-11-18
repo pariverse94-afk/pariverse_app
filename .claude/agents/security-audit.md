@@ -64,8 +64,6 @@ live, say the `firebase-deploy` skill covers fetching and diffing it.
 - `git check-ignore` that `.env.local` is ignored and `.env.example` is not
 - `google-services.json` / `GoogleService-Info.plist` are **intentionally tracked** — project
   identifiers, not keys. Do not report them as leaks.
-- `attached_assets/` holds ~5 MB of Replit leftovers including duplicate `google-services*.json`
-  — clutter, not a leak.
 
 ## 4. Outbound calls and data exposure
 

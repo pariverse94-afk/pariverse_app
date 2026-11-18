@@ -30,7 +30,7 @@ Note the in-app flow is a `mailto:` to `pariverse94@gmail.com` with a 30-day pro
 throughout, including the email subject line it tells users to send. A deletion page that
 appears to belong to a different app is a plausible reviewer flag.
 
-Check `app.json`, `hosting/delete-account/index.html`, `replit.md`, and the Play listing agree.
+Check `app.json`, `hosting/delete-account/index.html`, `docs/product.md`, and the Play listing agree.
 
 ## 3. Privacy policy must name the real sub-processors
 

@@ -7,7 +7,7 @@ closed testing passed, but the **production submission was rejected on disclosur
 [`.agents/memory/handoff-2026-11-16-play-rejection.md`](.agents/memory/handoff-2026-11-16-play-rejection.md)
 first — it has the current state and the open items.
 
-Product/feature detail lives in [replit.md](replit.md) — read it for what the app *does*.
+Product/feature detail lives in [docs/product.md](docs/product.md) — read it for what the app *does*.
 This file is for how to *work on* it.
 
 ## Repo layout (pnpm workspaces)
@@ -15,7 +15,6 @@ This file is for how to *work on* it.
 | Path | What |
 |---|---|
 | `artifacts/mobile` | Expo SDK 54 app, expo-router v6 — **the Play Store artifact** |
-| `artifacts/mockup-sandbox` | Vite design sandbox, not shipped |
 | `hosting/` | Firebase Hosting — serves the **Play-required account-deletion page** |
 | `functions/` | Cloud Functions (Node 22, `asia-south1`) — image SafeSearch scan, post-image cleanup, post classification via Groq, auto-hide on reports |
 | `firestore.rules`, `storage.rules` | The access-control layer for Firestore and uploaded images |
@@ -118,7 +117,7 @@ committed. This repo is **public**.
 - The app also has an in-app deletion screen at `artifacts/mobile/app/delete-account.tsx`.
   Both are required; they are not substitutes for each other.
 - **Naming is inconsistent:** `app.json` ships `name: "Pariverse"`, but the deletion page and
-  parts of `replit.md` say "Parivaar". Resolve this — a deletion page branded as a different
+  parts of `docs/product.md` say "Parivaar". Resolve this — a deletion page branded as a different
   app is a plausible policy flag.
 
 ## Secrets posture

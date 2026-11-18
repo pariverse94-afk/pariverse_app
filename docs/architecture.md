@@ -140,7 +140,6 @@ first require one.
 | Path | Role |
 |---|---|
 | `artifacts/mobile` | The Expo app — **this is the Play Store artifact** |
-| `artifacts/mockup-sandbox` | Vite design sandbox, not shipped |
 | `hosting/` | Firebase Hosting source — the account-deletion page |
 | `firestore.rules`, `firestore.indexes.json` | Deployed via `firebase.json` |
 | `.claude/skills`, `.claude/agents` | `firebase-deploy`, `play-compliance`, `security-audit` |
