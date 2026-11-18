@@ -61,6 +61,7 @@ export default function DeleteAccountScreen() {
             "Your profile (name, family name, email)",
             "Family members and chore data",
             "Mom's Corner posts and saved content",
+            "Your profile photo and images in your posts",
             "All meal plans associated with your account",
             "Authentication records",
           ].map((item) => (
