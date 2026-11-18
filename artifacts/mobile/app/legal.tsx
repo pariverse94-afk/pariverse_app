@@ -16,45 +16,71 @@ type Tab = typeof TABS[number];
 
 const CONTACT_EMAIL = "pariverse94@gmail.com";
 const APP_NAME = "Pariverse";
-const LAST_UPDATED = "July 2026";
+const LAST_UPDATED = "17 November 2026";
 
 function PrivacyPolicy() {
   return (
     <View>
       <Section title="Introduction">
-        {APP_NAME} ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
+        {`Pariverse ("we", "our", "us") is a family app for organising chores and meals, getting AI first-aid guidance for children, and sharing tips with other parents in Mom's Corner. This policy explains what we collect, why, who processes it, and how to delete it.
+Pariverse is for adults aged 18 and over. Children do not have accounts; a parent may add children as family members.`}
       </Section>
 
-      <Section title="Information We Collect">
-        {`• Account information: name, family name, and email address provided during sign-up (email/password or Google Sign-In)\n• Family data: family member names and roles you add within the app\n• Chore and meal plan data: content you create and save in the app\n• Community posts: content you voluntarily share in Mom's Corner\n• Device information: device type and operating system (for crash reporting only)`}
+      <Section title="Information we collect">
+        {`• Account: your name, family name and email address, from email sign-up or Google Sign-In.
+• Community profile: the public name you choose for Mom's Corner and, if you add one, a profile photo.
+• Family data: names and roles of family members you add, chores and who they are assigned to, and email addresses you enter to invite family members.
+• Meal data: your meal plan, pantry items, dietary preferences and nutritional goals.
+• Community content: posts you write, photos you attach, posts you like or save, people you block and posts you report.
+• First-aid questions: the condition, your child's age, how severe it seems and any details you type. These are sent to our AI provider to generate an answer and are not saved by us.
+• Reports of AI answers: if you report an AI answer, we keep a copy of that answer and what was asked so we can review it.
+We do not use analytics or advertising SDKs, do not collect your location, contacts or device identifiers for tracking, and do not run crash reporting.`}
       </Section>
 
-      <Section title="How We Use Your Information">
-        {`• To provide and personalise the app experience\n• To generate AI-powered meal suggestions and first aid guidance (processed via Groq AI — your data is not stored by the AI provider beyond the request)\n• To enable family member management and chore tracking\n• To allow you to participate in the Mom's Corner community\n• To improve app performance and fix bugs`}
+      <Section title="Who can see what">
+        {`• Your family data, meal data, saved posts and blocked list are private to your account.
+• Mom's Corner is one shared feed. Your posts, attached photos, community name, profile photo and likes are visible to every signed-in Pariverse user. Do not post anything you would not want other members to see.
+• If you enter a family member's email address, we check whether that address belongs to a Pariverse account so we can show them as "On Pariverse". We do not email them.`}
       </Section>
 
-      <Section title="Data Storage">
-        {`Your account is managed securely by Google Firebase. Your app data (family members, chores, meal plans) and community posts are stored in Google Cloud Firestore, linked to your account, so your data syncs across your devices. A copy is also kept on your device so the app works offline.`}
+      <Section title="How we use your information">
+        {`• To run the app and sync your data across your devices.
+• To generate meal suggestions and first-aid guidance with AI.
+• To label community posts with a category (recipe, parenting, health, general) using AI.
+• To check uploaded photos for explicit or violent content before they are shown to others.
+• To review reported posts and AI answers, and to hide posts that several members report.`}
       </Section>
 
-      <Section title="Data Sharing">
-        {`We do not sell, trade, or rent your personal information to third parties. We share data only with:\n• Google Firebase (authentication, account management, and data storage via Cloud Firestore)\n• Groq (AI inference — request data only, not stored)`}
+      <Section title="Service providers">
+        {`We do not sell, rent or trade your personal information, and we do not share it for advertising. Your data is processed only by these providers, for the purposes above:
+• Google Firebase — sign-in (Firebase Authentication), data storage (Cloud Firestore), photo storage (Cloud Storage for Firebase), server functions (Cloud Functions) and web hosting.
+• Google Cloud Vision — SafeSearch scanning of uploaded photos.
+• Groq — AI processing of meal requests, first-aid questions and community post text. Requests are sent to Groq to produce a response and are subject to Groq's own privacy policy.
+• Google Sign-In — only if you choose to sign in with Google.`}
       </Section>
 
-      <Section title="Children's Privacy">
-        {`${APP_NAME} is designed for family use. We do not knowingly collect personal information from children under 13. Child names entered for chore/meal tracking are stored within the parent's account data and are visible only to that account.`}
+      <Section title="Storage and security">
+        {`Your data is stored by Google Firebase and a copy is kept on your device so the app works offline. Data is encrypted in transit (HTTPS). Access to your private data is restricted to your account by server-side security rules. No method of storage or transmission is 100% secure.`}
       </Section>
 
-      <Section title="Data Deletion">
-        {`You may request deletion of your account and all associated data by emailing us at ${CONTACT_EMAIL}. We will process your request within 30 days.`}
+      <Section title="Retention">
+        {`We keep your data for as long as your account exists. Reports and reported content are kept while they are needed for review. When your account is deleted, your data is deleted as described below.`}
       </Section>
 
-      <Section title="Security">
-        {`We use industry-standard security measures including HTTPS encryption and secure authentication via Firebase Authentication. However, no method of transmission over the internet is 100% secure.`}
+      <Section title="Deleting your account and data">
+        {`You can request deletion from the app (Profile → Delete Account) or at https://pariverse-prod.web.app/delete-account, or by emailing pariverse94@gmail.com with the subject "Pariverse Account Deletion Request". We will delete your account, profile, profile photo, family, chore and meal data, community posts and their photos within 30 days and confirm by email.`}
       </Section>
 
-      <Section title="Contact Us">
-        {`For privacy-related queries, contact us at:\n${CONTACT_EMAIL}`}
+      <Section title="Children">
+        {`Pariverse is not directed at children and children cannot create accounts. Information a parent enters about their children (names, roles, an age in a first-aid question) is used only to provide the app's features to that parent.`}
+      </Section>
+
+      <Section title="Changes to this policy">
+        {`We will update this page when our practices change and revise the date above. Significant changes will be shown in the app.`}
+      </Section>
+
+      <Section title="Contact">
+        {`For any privacy question or request, email pariverse94@gmail.com.`}
       </Section>
     </View>
   );

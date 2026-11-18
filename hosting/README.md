@@ -10,6 +10,13 @@ This directory was reconstructed on 2026-08-11 by downloading the live page, whi
 deployed on 2026-07-29 without its source ever being committed. The captured file is
 byte-identical to what is served (4297 bytes).
 
+## Privacy policy page
+
+`privacy/index.html` is served at <https://pariverse-prod.web.app/privacy> — the public privacy
+policy URL for Play Console. Same `cleanUrls` layout as the deletion page: keep the file at
+`privacy/index.html`. Its text is generated from the same source as the in-app policy
+(`artifacts/mobile/app/legal.tsx`) and `docs/pariverse-privacy-policy.md`; change all three together.
+
 ## Layout must not change casually
 
 The live site's behaviour was probed before writing `firebase.json`:
