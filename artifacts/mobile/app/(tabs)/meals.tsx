@@ -56,7 +56,7 @@ export default function MealsScreen() {
           <View>
             <Text style={[styles.title, { color: colors.foreground }]}>Meal Planner</Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-              {totalMeals} meals planned this week
+              {totalMeals} {totalMeals === 1 ? "meal" : "meals"} planned this week
             </Text>
           </View>
           <View style={styles.headerActions}>
