@@ -13,6 +13,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MarkdownText } from "@/components/MarkdownText";
+import { ReportAIButton } from "@/components/ReportAIButton";
 import { useColors } from "@/hooks/useColors";
 
 type Severity = "mild" | "moderate" | "severe";
@@ -67,8 +69,10 @@ Important:
 - Reference common Indian household remedies where medically appropriate
 - End with "When to seek medical attention" section
 - Do NOT diagnose — always recommend consulting a doctor
+- Never suggest applying honey, oil, ghee, butter, toothpaste, turmeric paste or any other home remedy to burns or open wounds — only cool running water and a clean, non-stick covering
+- For choking, seizures, head injuries and severe allergic reactions, give only standard first aid, never home remedies
 
-Format your response clearly with headers and numbered steps.`;
+Format your response with short headings, numbered steps and bullet points. Do not use tables.`;
 
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -250,11 +254,19 @@ Format your response clearly with headers and numbered steps.`;
             ) : (
               guidance ? (
                 <View style={[styles.guidanceBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={[styles.guidanceText, { color: colors.foreground }]}>{guidance}</Text>
+                  <MarkdownText>{guidance}</MarkdownText>
                   {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: 8 }} />}
                 </View>
               ) : null
             )}
+
+            {!loading && !error && guidance ? (
+              <ReportAIButton
+                feature="first_aid"
+                content={guidance}
+                context={`${conditionTitle ?? "First Aid"} • ${childAge} • ${severity}`}
+              />
+            ) : null}
 
             <TouchableOpacity
               style={[styles.resetBtn, { borderColor: colors.border }]}

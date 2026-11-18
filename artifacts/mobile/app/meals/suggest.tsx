@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ReportAIButton } from "@/components/ReportAIButton";
 import { useColors } from "@/hooks/useColors";
 import { useMeals, type DayKey, type MealSlot, type MealEntry } from "@/context/MealContext";
 const MEAL_TYPES = [
@@ -34,6 +35,25 @@ const NUTRITION_OPTIONS = [
 
 const DAYS: DayKey[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+/**
+ * Map stored values onto the chip labels, case-insensitively. Older builds saved
+ * "High protein" / "No MSG", which never matched a chip — so they were sent to
+ * the AI while showing as unselected, with no way to turn them off.
+ */
+function normaliseTo(options: string[], stored: string[]): string[] {
+  const byLower = new Map(options.map((o) => [o.toLowerCase(), o]));
+  return Array.from(new Set(stored.map((s) => byLower.get(s.toLowerCase())).filter(Boolean) as string[]));
+}
+
+/** Spelled out because the model otherwise keeps ginger and potato in "Jain" meals. */
+const DIET_RULES: Record<string, string> = {
+  Jain: "Jain: strictly no onion, garlic, ginger, potato, carrot, beetroot, radish or any other root/underground vegetable, and no eggs, meat or fish",
+  "No Onion-Garlic": "No Onion-Garlic: no onion, garlic, shallots or spring onion in any form",
+  Vegan: "Vegan: no dairy (milk, paneer, curd, ghee, butter), no honey, no eggs, meat or fish",
+  Vegetarian: "Vegetarian: no meat, fish or eggs",
+  "Gluten-Free": "Gluten-Free: no wheat, maida, atta, semolina/rava, barley or regular soy sauce",
+};
+
 function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
@@ -42,9 +62,16 @@ export default function MealSuggestScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { inventory, preferences, nutritionalGoals, setPreferences, setNutritionalGoals, setMeal, weeklyPlan } = useMeals();
-  const [selectedType, setSelectedType] = useState<"breakfast" | "lunch" | "dinner" | "weekly">("lunch");
-  const [localPrefs, setLocalPrefs] = useState<string[]>(preferences);
-  const [localGoals, setLocalGoals] = useState<string[]>(nutritionalGoals);
+  // The Meals tab passes the day being viewed (and the empty slot tapped, if any)
+  // so suggestions land where the user was looking, not on the first free day.
+  const params = useLocalSearchParams<{ day?: string; slot?: string }>();
+  const targetDayParam = DAYS.find((d) => d === params.day);
+  const initialSlot = (["breakfast", "lunch", "dinner"] as const).find((s) => s === params.slot);
+  const [selectedType, setSelectedType] = useState<"breakfast" | "lunch" | "dinner" | "weekly">(initialSlot ?? "lunch");
+  const [localPrefs, setLocalPrefs] = useState<string[]>(() => normaliseTo(DIET_OPTIONS, preferences));
+  const [localGoals, setLocalGoals] = useState<string[]>(() => normaliseTo(NUTRITION_OPTIONS, nutritionalGoals));
+  const scrollRef = useRef<ScrollView>(null);
+  const resultsY = useRef(0);
   const [familySize, setFamilySize] = useState("4");
   const [newInventoryItem, setNewInventoryItem] = useState("");
   const [localInventory, setLocalInventory] = useState<string[]>(inventory);
@@ -91,6 +118,7 @@ export default function MealSuggestScreen() {
 Generate ${mealCount} for ${mealTypeLabel} for a family of ${parsedFamilySize}.
 
 Dietary preferences: ${prefsText}
+${localPrefs.filter((p) => DIET_RULES[p]).map((p) => `- ${DIET_RULES[p]}`).join("\n")}
 Available pantry ingredients: ${inventoryText}
 Nutritional goals: ${goalsText}
 
@@ -143,6 +171,8 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
       setSuggestions(parsed.meals ?? []);
       setNutritionSummary(parsed.nutritionSummary ?? "");
       setTips(parsed.tips ?? "");
+      // Results render below the form, off-screen; bring them into view.
+      setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(resultsY.current - 12, 0), animated: true }), 250);
     } catch {
       Alert.alert("AI Error", "Could not generate meal suggestions. Please try again.");
     } finally {
@@ -160,7 +190,7 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
       prepTime: meal.prepTime ?? "30 min",
       nutritionHighlights: meal.nutritionHighlights,
     };
-    const targetDay: DayKey = DAYS.find((d) => !weeklyPlan[d][slot]) ?? "Mon";
+    const targetDay: DayKey = targetDayParam ?? DAYS.find((d) => !weeklyPlan[d][slot]) ?? "Mon";
     setMeal(targetDay, slot, entry);
     Alert.alert("Added!", `${meal.name} added to ${targetDay} ${slot}`);
   };
@@ -177,6 +207,7 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
       </View>
 
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 20 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -258,6 +289,13 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
               <Text style={[styles.inventoryChipText, { color: colors.foreground }]}>{item}</Text>
             </View>
           ))}
+          {localInventory.length > 10 && (
+            <View style={[styles.inventoryChip, { backgroundColor: colors.muted }]}>
+              <Text style={[styles.inventoryChipText, { color: colors.mutedForeground }]}>
+                +{localInventory.length - 10} more
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Generate button */}
@@ -279,7 +317,7 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
 
         {/* Results */}
         {suggestions.length > 0 && (
-          <View style={styles.results}>
+          <View style={styles.results} onLayout={(e) => { resultsY.current = e.nativeEvent.layout.y; }}>
             <Text style={[styles.resultsTitle, { color: colors.foreground }]}>Suggested Meals</Text>
 
             {nutritionSummary ? (
@@ -331,6 +369,12 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
                 <Text style={[styles.tipsText, { color: colors.mutedForeground }]}>{tips}</Text>
               </View>
             )}
+
+            <ReportAIButton
+              feature="meal_suggestions"
+              content={JSON.stringify({ meals: suggestions, nutritionSummary, tips })}
+              context={`${selectedType} • family of ${familySize} • ${localPrefs.join(", ") || "no preferences"}`}
+            />
           </View>
         )}
       </ScrollView>

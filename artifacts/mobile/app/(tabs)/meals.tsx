@@ -62,7 +62,7 @@ export default function MealsScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[styles.suggestBtn, { backgroundColor: colors.primary }]}
-              onPress={() => router.push("/meals/suggest")}
+              onPress={() => router.push({ pathname: "/meals/suggest", params: { day: selectedDay } })}
               testID="ai-suggest-btn"
             >
               <Ionicons name="sparkles" size={14} color="#fff" />
@@ -116,7 +116,7 @@ export default function MealsScreen() {
               <TouchableOpacity
                 key={slot}
                 style={[styles.emptySlot, { borderColor: colors.border, backgroundColor: colors.card }]}
-                onPress={() => router.push("/meals/suggest")}
+                onPress={() => router.push({ pathname: "/meals/suggest", params: { day: selectedDay, slot } })}
               >
                 <Ionicons name={SLOT_ICONS[slot]} size={18} color={colors.mutedForeground} />
                 <Text style={[styles.emptySlotLabel, { color: colors.mutedForeground }]}>

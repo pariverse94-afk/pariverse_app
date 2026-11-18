@@ -43,8 +43,10 @@ const DEFAULT_INVENTORY = [
   "Coriander", "Paneer", "Yogurt", "Ghee", "Wheat flour",
 ];
 
-const DEFAULT_PREFERENCES = ["Vegetarian", "No MSG"];
-const DEFAULT_GOALS = ["High protein", "Low oil"];
+// Must match the chip labels in app/meals/suggest.tsx exactly, or the
+// defaults are applied to the AI prompt without ever showing as selected.
+const DEFAULT_PREFERENCES = ["Vegetarian"];
+const DEFAULT_GOALS = ["High Protein", "Low Oil"];
 
 const STORAGE_KEY = "parivaar_meals_v2";
 const MealContext = createContext<MealContextValue | null>(null);
