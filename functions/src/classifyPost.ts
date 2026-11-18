@@ -15,7 +15,7 @@ const GROQ_API_KEY = defineSecret("GROQ_API_KEY");
 const CATEGORIES = ["recipe", "parenting", "health", "general"] as const;
 type Category = (typeof CATEGORIES)[number];
 
-const MODEL = "llama-3.3-70b-versatile";
+const MODEL = "openai/gpt-oss-120b";
 
 const PROMPT = `You label posts in an Indian parenting community app. Reply with exactly one word from this list and nothing else:
 
@@ -58,7 +58,10 @@ export const onPostCreatedClassify = onDocumentCreated(
         },
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: 4,
+          // gpt-oss reasons before answering and those tokens count against
+          // max_tokens; 4 left no room for the one-word answer.
+          max_tokens: 256,
+          reasoning_effort: "low",
           temperature: 0,
           messages: [
             { role: "system", content: PROMPT },

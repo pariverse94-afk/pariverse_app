@@ -125,7 +125,7 @@ Respond with valid JSON only, no markdown, no extra text. Use this exact format:
           "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-120b",
           max_tokens: 4096,
           messages: [
             { role: "system", content: "You are a helpful nutritionist. Always respond with valid JSON only, no markdown code blocks, no extra text." },
