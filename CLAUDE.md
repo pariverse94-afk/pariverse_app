@@ -2,8 +2,8 @@
 
 Family app for urban India: an Expo mobile app plus a few Firebase Cloud Functions for
 community moderation. There is no API of our own. Package `com.pariverse.app` on Google Play:
-closed testing passed, but the **production submission was rejected on disclosure policy**
-(2026-11). Read
+closed testing passed; the first production submission was rejected on disclosure policy
+(2026-11) and was approved after the target audience was set to 18+. Read
 [`.agents/memory/handoff-2026-11-16-play-rejection.md`](.agents/memory/handoff-2026-11-16-play-rejection.md)
 first — it has the current state and the open items.
 
@@ -42,6 +42,16 @@ Expo app → Firebase Auth + Cloud Firestore (direct, local-first) + Firebase St
 and post images) and → Groq (direct, for meals and first aid). Cloud Functions react to
 Firestore and Storage events: Cloud Vision SafeSearch on uploads, Groq for post categories.
 The app never calls a function directly. No API of our own.
+
+## Billing is off — photos and Functions are disabled
+
+`pariverse-prod` is on the free Spark plan (billing disabled, checked 2026-11-18). Cloud
+Storage uploads, Cloud Vision and every Cloud Function cannot run there, so only
+`onReportCreated` is deployed and it does not execute; `storage.rules` live is deny-all.
+Release 1.1.0 therefore ships with photo uploads and AI post categories switched off in
+`artifacts/mobile/lib/features.ts` (the composer asks for a category; reports are reviewed by
+hand in the console). That file lists what to deploy before switching either back on —
+enable Blaze first, and update the privacy policy in the same release.
 
 ## Blast radius — check before you act
 
@@ -101,7 +111,8 @@ Builds go through **EAS**, not local Gradle. `artifacts/mobile/eas.json` defines
 
 Before any production build, bump **`android.versionCode`** in
 `artifacts/mobile/app.json` — Play rejects a duplicate versionCode. Bump `version` too
-when it is a user-visible release. Current: `version 1.0.0`, `versionCode 5`.
+when it is a user-visible release. Current: `version 1.1.0`, `versionCode 6` (built
+2026-11-18, EAS build `3c105f6a`, not yet confirmed uploaded to Play).
 
 `submit.production.android.track` is currently `internal`. Closed testing is a *different*
 track — change this deliberately, don't assume it is right.
