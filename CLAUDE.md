@@ -112,7 +112,7 @@ Builds go through **EAS**, not local Gradle. `artifacts/mobile/eas.json` defines
 Before any production build, bump **`android.versionCode`** in
 `artifacts/mobile/app.json` — Play rejects a duplicate versionCode. Bump `version` too
 when it is a user-visible release. Current: `version 1.1.0`, `versionCode 6` (built
-2026-11-24, EAS build `e401402c`, auto-backup off; not yet confirmed uploaded to Play).
+2026-11-24, EAS build `e401402c`, auto-backup off; submitted to Play production with updated privacy policy URL and Data safety form on 2026-11-26).
 
 `submit.production.android.track` is currently `internal`. Closed testing is a *different*
 track — change this deliberately, don't assume it is right.
